@@ -36,6 +36,15 @@ var PREFIX = config.server_prefix;
 
 var requests_map = prepare_map_with_requests();
 var app = http.createServer(function(req, res) {
+	var body = '';
+	if(req.method=='POST') {
+		req.on("data", function(data) {
+			body += data;
+		})
+		req.on("end", function() {
+			console.log(body);
+		})
+	}
 	var parsedUrl = url.parse(req.url);
 	var pathname = parsedUrl.pathname;
 	var parameters = querystring.parse(parsedUrl.query);
@@ -176,11 +185,15 @@ function authenticate(headers, success, error){
 }
 
 function prepare_script_tag(typeOfChart) {
-	var tag = jsdom.createElement("script");
-	tag.setAttribute("type", "text/javascript");
-	tag.setAttribute("src",[PREFIX, "main", typeOfChart].join("/"));
-
-    return tag;
+	if(ChartsMap[typeOfChart]) {
+	    var tag = jsdom.createElement("script");
+	    tag.setAttribute("type", "text/javascript");
+	    tag.setAttribute("src",[PREFIX, "main", typeOfChart].join("/"));
+	    return tag;
+	}
+	else {
+	    throw Error("Type of chart: '" + typeOfChart + "' not supported");
+	}
 }
 function prepare_map_with_requests() {
 	var map = {};
@@ -205,10 +218,11 @@ function prepare_map_with_requests() {
 	};
 
 	map["images"] = function(req, res, pathname) {
-		fs.readFile('.'+pathname, function(error, data) {
+		var filename = unescape(pathname);
+		fs.readFile('.'+filename, function(error, data) {
 			if(error) {
 				res.writeHead(404);
-				res.write("File " + pathname + " : not found!\n");
+				res.write("File " + filename + " : not found!\n");
 				res.write(error.toString());
 				res.end();
 			}
@@ -222,7 +236,16 @@ function prepare_map_with_requests() {
 	map["main"] = function(req, res, pathname){
 		var type = pathname.split("/")[2];
 		var resource = pathname.split("/")[1];
-
+		if(!type) {
+			res.write("Type of chart not specified!\n");
+			res.end();
+			return;
+		}
+		if(!ChartsMap[type]) {
+			res.write("Type of chart: '" + type + "' not supported!\n");
+			res.end();
+			return;
+		}
 		var file_path = [METHODS_DIR, type, type+"_chart_"+resource].join("/");
 		file_path += resource==="style" ? ".css" : ".js";
 
@@ -242,10 +265,15 @@ function prepare_map_with_requests() {
 
 	map["scripts"] = function(req, res, pathname){
 		var chart_type = pathname.split("/")[2];
-		var tag = prepare_script_tag(chart_type);
-
-		res.write(tag.outerHTML);
-		res.end();
+		try {
+			var tag = prepare_script_tag(chart_type);
+			res.write(tag.outerHTML);
+	                res.end();
+		}
+		catch(error) {
+			res.write(error.message);
+			res.end();
+		}
 	};
 
 	return map;

@@ -61,6 +61,10 @@ var connect = function(address, success, error){
 		};
 
 		var checkIfExperimentVisibleToUser = function(userID, experimentID, success, error) {
+	    if(!mongo.BSONPure.ObjectID.isValid(experimentID)) {
+		error("'" + experimentID + "' is not valid ObjectID");
+		return;
+	    }
             console.log("\tuserID: ", userID);
             console.log("\texperimentID: ", experimentID);
 			db.collection("experiments").find({$or : [
@@ -107,6 +111,11 @@ var connect = function(address, success, error){
         }
 
 		var getParameters = function(experimentID, success, error) {
+			if(!mongo.BSONPure.ObjectID.isValid(experimentID)) {
+	                	error("'" + experimentID + "' is not valid ObjectID");
+	                	return;
+   	                }
+
 			var data = {};
 
 			var filter = {is_done: true, is_error: {'$exists': false}};

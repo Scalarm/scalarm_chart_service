@@ -15,7 +15,8 @@ var logger = log4js.getLogger("service.js");
 module.exports = function() {
     var map = {};
     map["interaction"] = function(parameters, success, error){
-        if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"] && parameters["output"]){
+        if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"] && parameters["output"]
+                    && validate_params(parameters)){
             db_retriever.getInteraction(parameters["id"], 
                                         parameters["param1"], 
                                         parameters["param2"],
@@ -26,10 +27,10 @@ module.exports = function() {
             }, error);
         }
         else
-            error("Request parameters missing");
+            error("Request parameters missing or invalid");
     }
     map["pareto"] = function(parameters, success, error){
-        if(parameters["id"] && parameters["chart_id"]){
+        if(parameters["id"] && parameters["chart_id"] && validate_params(parameters)){
             db_retriever.getPareto(parameters["id"], parameters["output"], function(data) {
                 var object = {};
                 object.content = prepare_pareto_chart_content(parameters, data);
@@ -37,10 +38,11 @@ module.exports = function() {
             }, error);
         }
         else
-            error("Request parameters missing");
+            error("Request parameters missing or invalid");
     }
 	map["3d"] = function(parameters, success, error){
-		if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"] && parameters["param3"]) {
+		if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"] && parameters["param3"]
+                        && validate_params(parameters)) {
             db_retriever.get3d(parameters["id"], parameters["param1"], parameters["param2"], parameters["param3"], function (data) {
                 var object = {};
                 object.content = prepare_3d_chart_content(parameters, data);
@@ -48,7 +50,7 @@ module.exports = function() {
             }, error);
         }
 		else
-            error("Request parameters missing");
+            error("Request parameters missing or invalid");
 	}
     return map;
 }
@@ -78,4 +80,14 @@ function prepare_3d_chart_content(parameters, data) {
     output += "\n})();</script>";
 
     return output;
+}
+
+
+var pattern = /^\w+$/
+function validate_params(parameters) {
+    for (var key in parameters) {
+        if(!pattern.test(parameters[key]))
+            return false;
+    }
+    return true;
 }
