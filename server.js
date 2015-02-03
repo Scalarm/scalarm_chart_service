@@ -204,6 +204,7 @@ function prepare_map_with_requests() {
             panel_locals.parameters_and_output = data.parameters.concat(data.result);
 			// panel_locals.address = ADDRESS;
 			panel_locals.prefix = PREFIX;
+			panel_locals.experimentID = experimentID;
 			res.writeHead(200);
 			var panel = jade.renderFile("panel.jade", panel_locals);
 			res.write(panel);
