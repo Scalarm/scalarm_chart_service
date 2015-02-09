@@ -179,121 +179,13 @@ var connect = function(address, success, error){
 			callback(stream);
 		};
 
-		var getPareto = function(id, outputParam, success, error){
-			getData(id, function(array, args, mins, maxes){
-				effects = [];
-				effects.push(Math.abs(calculateAverage(array, args[0], maxes[args[0]], outputParam)-calculateAverage(array, args[0], mins[args[0]], outputParam)));
-				effects.push(Math.abs(calculateAverage(array, args[1], maxes[args[1]], outputParam)-calculateAverage(array, args[1], mins[args[1]], outputParam)));
-				var data = [];
-				for(i in args) {
-					data.push({
-			 			name:  args[i],
-			 			value: effects[i]
-			 		});
-			 	}
-			 	data.sort(function(a,b){ return b.value-a.value });
-			 	success(data);
-			}, error);
-		};
-
-		var getInteraction = function(id, param1, param2, outputParam, success, error){
-		  	getData(id, function(array, args, mins, maxes){
-			  	var low_low=array.filter(function(obj) {
-			  		return getValue(obj,param1) === mins[param1]
-				}).filter(function(obj) { 
-					return getValue(obj,param2) === mins[param2]
-				})[0]; //TODO maybe calculate average of data in arrays?
-
-				var low_high=array.filter(function(obj) {
-					return getValue(obj,param1) === mins[param1]
-				}).filter(function(obj) { 
-					return getValue(obj,param2) === maxes[param2]
-				})[0];
-
-				var high_low=array.filter(function(obj) {
-					return getValue(obj,param1) === maxes[param1]
-				}).filter(function(obj) { 
-					return getValue(obj,param2) === mins[param2]
-				})[0];
-
-				var high_high=array.filter(function(obj) {
-					return getValue(obj,param1) === maxes[param1]
-				}).filter(function(obj) { 
-					return getValue(obj,param2) === maxes[param2]
-				})[0];
-
-				//TODO refactor
-				if(!(low_low && low_high && high_low && high_high)) {
-					error("Not enough data in database!");
-					return;
-				}
-				else {
-				
-					result = [];
-					result.push(low_low.result[outputParam],
-								low_high.result[outputParam], 
-								high_low.result[outputParam], 
-								high_high.result[outputParam])
-					var data = {};
-					data[param1] = {
-						domain: [mins[param1], maxes[param1]]
-					};
-					data[param2] = {
-						domain: [mins[param2], maxes[param2]]
-					};
-					data.effects = result;
-					//console.log(data);
-					success(data);
-				}
-			}, error);
-		};
-
-        var get3d = function(id, param1, param2, param3, success, error){
-            getData(id, function(array, args, mins, maxes){
-                var data = Array.apply(null, new Array(array.length)).map(Number.prototype.valueOf,0)
-                if (args.indexOf(param1) != -1) {
-                    for (var i in data) {
-                        data[i] = [array[i].arguments[param1]];
-                    }
-                }
-                else{
-                    for (var i in data) {
-                        data[i] = [array[i].result[param1]];
-                        console.log(array[i].result[param1])
-                    }
-                }
-                if (args.indexOf(param2) != -1) {
-                    for (var i in data) {
-                        data[i].push(array[i].arguments[param2]);
-                    }
-                }
-                else{
-                    for (var i in data) {
-                        data[i].push(array[i].result[param2]);
-                    }
-                }
-                if (args.indexOf(param3) != -1) {
-                    for (var i in data) {
-                        data[i].push(array[i].arguments[param3]);
-                    }
-                }
-                else{
-                    for (var i in data) {
-                        data[i].push(array[i].result[param3]);
-                    }
-                }
-                console.log(param1, param2, param3)
-                success(data);
-            }, error);
-        }
-
-		module.exports.getPareto = getPareto;
-		module.exports.getInteraction = getInteraction;
-        module.exports.get3d = get3d;
+		
 		module.exports.checkIfExperimentVisibleToUser = checkIfExperimentVisibleToUser;
 		module.exports.getParameters = getParameters;
 		module.exports.createStreamFor = createStreamFor;
         module.exports.checkUserAndPassword = checkUserAndPassword;
+
+        module.exports.getData = getData;
 	});
 }
 
@@ -321,4 +213,7 @@ function calculateAverage(data, parameter_name, parameter_value, outputParam) {
 };
 
 module.exports.connect = connect;
+
+module.exports.getValue = getValue;
+module.exports.calculateAverage = calculateAverage;
 

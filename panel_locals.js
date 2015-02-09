@@ -1,47 +1,25 @@
-module.exports = {
-    groups: [
-        {
-            id: "group",
-            name: "Analyses methods",
-            methods: [{
-                name: "Interaction",
-                id: "interactionModal",
-                image: "/chart/images/material_design/interaction_icon.png",
-                description: "Shows interaction between 2 input parameters"
-            },{
-                name: "Pareto",
-                id: "paretoModal",
-                image: "/chart/images/material_design/pareto_icon.png",
-                description: "Shows significance of parameters (or interaction)"
-            },{
-                name: "Histograms",
-                id: "experiment-analysis-modal",
-                em_class: "histogram-analysis",
-                image: "/chart/images/material_design/histogram_icon.png",
-                description: "Histograms analysis"
-            },{
-                name: "Regression trees",
-                id: "experiment-analysis-modal",
-                em_class: "rtree-analysis",
-                image: "/chart/images/material_design/regression_icon.png",
-                description: "Regression trees analysis"
-            },{
-                name: "Scatter plots",
-                id: "experiment-analysis-modal",
-                em_class: "bivariate-analysis",
-                image: "/chart/images/material_design/scatter_icon.png",
-                description: "Bivariate analysis - scatter plot"
-            }, {
-                name: "3D chart",
-                id: "threeDModal",
-                image: "/chart/images/material_design/3dchart_icon.png",
-                description: "3D charts - scatter plot"
-            }]
+var methods = require("./methods").methods;
+var groups = require("./methods").groups;
 
+for(var i in methods){
+    var name = methods[i];
+    var info = require("./visualisation_methods/" + name + "/plugin.js").info;
+    var group_name = info.group;
+    var group = groups[group_name];
+    if(group){
+        if(group.methods){
+            group.methods.push(info);
         }
-    ],
-    pretty: true
-};
+        else {
+            group.methods = [info];
+        }
+    }
+    else{
+        throw Error("No such group: " + group_name + "(method: " + name + ")");
+    }
+}
+
+module.exports = {groups: groups};
 
 //module.exports =
 //{

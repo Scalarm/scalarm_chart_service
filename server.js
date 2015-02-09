@@ -9,7 +9,6 @@ var parseCookies = require("cookie").parse;
 var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
-var ChartsMap = require("./service.js")();	//TODO - zienic zeby modul eksportowal mape a nie funkcje, albo przekazywac handlery
 var DataRetriever = require("./data_retriever.js");
 var LoadBalancerRegistration = require("./load_balancer_registration.js");
 
@@ -18,6 +17,7 @@ var panel_locals = require("./panel_locals.js");
 
 var jade = require("jade");
 var METHODS_DIR = "./visualisation_methods";
+var METHODS = require("./methods").methods;
 
 var log4js = require("log4js");
 log4js.configure({
@@ -34,69 +34,19 @@ var logger = log4js.getLogger("server.js");
 var PORT = config.server_port;
 var PREFIX = config.server_prefix;
 
-var requests_map = prepare_map_with_requests();
-var app = http.createServer(function(req, res) {
-	var body = '';
-	if(req.method=='POST') {
-		req.on("data", function(data) {
-			body += data;
-		})
-		req.on("end", function() {
-			console.log(body);
-		})
-	}
-	var parsedUrl = url.parse(req.url);
-	var pathname = parsedUrl.pathname;
-	var parameters = querystring.parse(parsedUrl.query);
-	logger.info(pathname + " : " +JSON.stringify(parameters));
+//prepare panel.jade
+var panel = fs.readFileSync("panel.jade.template", 'utf8');
+var includes = "";
+for(var i in METHODS){
+	includes = includes + "include " + chart_to_modal_template(METHODS[i]) + "\n";
+}
+panel = panel.replace(/###INCLUDES###/, includes);
+fs.writeFileSync("panel.jade", panel, 'utf8');
 
-	var path = pathname.split("/")[1];
-	if(path==="status") {
-                res.write("status ok");
-                res.end();
-        }
-	else if(requests_map[path]) {
-        authenticate(req.headers, function (userID) {
-            requests_map[path](req, res, pathname, parameters["id"]);
-        }, function (err) {
-            logger.error("Authentication failed: " + err);
-            res.writeHead(401);
-            res.write(err.toString());
-            res.end();
-        });
-    }
-	else if(ChartsMap[path]) {
-		ChartsMap[path](parameters, function(object) {
-			authenticate(req.headers, function(userID) {
-                DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
-                    logger.info("OK! Successfully authorized.");
-                    //res.writeHead(200, {'Content-Type': 'text/plain'});
-                    var output = jade.renderFile(path_to_view_template(path), parameters);
-					output += object.content;
-                    res.write(output);
-                    res.end();
-                }, function(err){
-                    logger.error("User " + userID + " doesn't have access to experiment " + parameters["id"]);
-                    res.write("User " + userID + " doesn't have access to experiment " + parameters["id"]);
-                    res.end();
-                })
-			}, function(err) {
-				console.log("FAILED! Sending info about error to Scalarm... \n" + err);
-				res.write("Unable to authenticate");
-				res.end();
-			});
-		}, function(err) {
-			res.write(err);
-			res.end();
-			return;
-		});
-	}
-	else {
-		res.writeHead(404);
-		res.write(pathname + " : incorrect request!");
-		res.end();
-	}
-});
+
+var requests_map = prepare_map_with_requests();
+var ChartsMap = create_charts_map();
+var app = http.createServer(server_handler);
 
 LoadBalancerRegistration.retrieveDBAddress(function(address) {
     DataRetriever.connect(address, function(){
@@ -118,19 +68,53 @@ wsServer = new WebSocketServer({
 	httpServer: app
 })
 
-wsServer.on('request', function(request) {
+wsServer.on('request', ws_handler);
+
+//--------------------------------
+function server_handler(req, res) {
+	var body = '';
+	if(req.method=='POST') {
+		req.on("data", function(data) {
+			body += data;
+		})
+		req.on("end", function() {
+			console.log(body);
+		})
+	}
+	var parsedUrl = url.parse(req.url);
+	var pathname = parsedUrl.pathname;
+	var parameters = querystring.parse(parsedUrl.query);
+	logger.info(pathname + " : " +JSON.stringify(parameters));
+
+	var path = pathname.split("/")[1];
+	if(path === "status") {
+        res.write(JSON.stringify({status: "ok", message: ""}));
+        res.end();
+    }
+	else if(requests_map[path]) {
+        authenticate(req.headers, function (userID) {
+            requests_map[path](req, res, pathname, parameters, userID);
+        }, function (err) {
+            logger.error("Authentication failed: " + err);
+            res.writeHead(401);
+            res.write(err.toString());
+            res.end();
+        });
+    }
+	else {
+		res.writeHead(404);
+		res.write(pathname + " : incorrect request!");
+		res.end();
+	}
+}
+
+function ws_handler(request) {
 	logger.info(" Connection from origin " + request.origin);
-	var experimentID = request.httpRequest.url.slice(1);
+	var experimentID = request.httpRequest.url.split("/")[2];
 	authenticate(request.httpRequest.headers, function(userID) {
 		logger.info("OK! Successfully authorized.");
         DataRetriever.checkIfExperimentVisibleToUser(userID, experimentID, function(){
             var connection = request.accept(null, request.origin);
-
-            connection.on('close', function(connection) {
-                logger.info("Connection closed");
-                //TODO - close cursor?
-            });
-
             DataRetriever.createStreamFor(connection, experimentID, function(stream){
             	connection.on('close', function(connection){
             		console.log("Connection closed");
@@ -145,9 +129,8 @@ wsServer.on('request', function(request) {
 		console.log("Authentication failed! \n" + err);
 		request.reject();
 	});
-});
+}
 
-//--------------------------------
 function authenticate(headers, success, error){
     var cookies = headers.cookie;
     if(cookies) {
@@ -157,8 +140,9 @@ function authenticate(headers, success, error){
         //maybe try without exec...?
         exec("ruby serialized_object_to_json.rb " + new Buffer(output).toString("base64"), function(err, stdout, stderr) {
             if (err !== null) {
-                console.log('stderr: ' + stderr);
-                console.log('exec error: ' + err);
+            	console.log("Error calling ruby deserialization")
+                console.log('\tstderr: ' + stderr);
+                console.log('\texec error: ' + err);
                 error(err);
                 return;
             }
@@ -178,7 +162,6 @@ function authenticate(headers, success, error){
             username=parts[0],
             password=parts[1];
 
-        var crypto = require('crypto');
         DataRetriever.checkUserAndPassword(username, password, success, error);
     	
     }
@@ -195,91 +178,162 @@ function prepare_script_tag(typeOfChart) {
 	    throw Error("Type of chart: '" + typeOfChart + "' not supported");
 	}
 }
+
 function prepare_map_with_requests() {
 	var map = {};
-	map["panel"] = function(req, res, _, experimentID){
-		DataRetriever.getParameters(experimentID, function(data) {
-			panel_locals.parameters = data.parameters;
-			panel_locals.output = data.result;
-            panel_locals.parameters_and_output = data.parameters.concat(data.result);
-			// panel_locals.address = ADDRESS;
-			panel_locals.prefix = PREFIX;
-			panel_locals.experimentID = experimentID;
-			res.writeHead(200);
-			var panel = jade.renderFile("panel.jade", panel_locals);
-			res.write(panel);
-			res.end();
-		},
-		function(err) {
-			res.writeHead(404);
-			res.write("Error getting parameters\n");
-			res.write(err+"\n");
-			res.end();
-		})
-	};
-
-	map["images"] = function(req, res, pathname) {
-		var filename = unescape(pathname);
-		fs.readFile('.'+filename, function(error, data) {
-			if(error) {
-				res.writeHead(404);
-				res.write("File " + filename + " : not found!\n");
-				res.write(error.toString());
-				res.end();
-			}
-			else {
-				res.write(data);
-				res.end();
-			}
-		});
-	};
-
-	map["main"] = function(req, res, pathname){
-		var type = pathname.split("/")[2];
-		var resource = pathname.split("/")[1];
-		if(!type) {
-			res.write("Type of chart not specified!\n");
-			res.end();
-			return;
-		}
-		if(!ChartsMap[type]) {
-			res.write("Type of chart: '" + type + "' not supported!\n");
-			res.end();
-			return;
-		}
-		var file_path = [METHODS_DIR, type, type+"_chart_"+resource].join("/");
-		file_path += resource==="style" ? ".css" : ".js";
-
-		fs.readFile(file_path, function(error, data) {
-			if(error) {
-				res.writeHead(404);
-				res.write("File " + file_path + " : not found!\n");
-				res.write(error.toString());
-				res.end();
-			}
-			else {
-				res.write(data);
-				res.end();
-			}
-		});
-	};
-
-	map["scripts"] = function(req, res, pathname){
-		var chart_type = pathname.split("/")[2];
-		try {
-			var tag = prepare_script_tag(chart_type);
-			res.write(tag.outerHTML);
-	                res.end();
-		}
-		catch(error) {
-			res.write(error.message);
-			res.end();
-		}
-	};
-
+	map["panel"] = panel_handler;
+	map["images"] = images_handler;
+	map["main"] = main_handler;
+	map["scripts"] = scripts_handler;
+	map["get"] = chart_handler;
 	return map;
 }
 
-function path_to_view_template(path) {
-	return [METHODS_DIR, path, path+"Chart.jade"].join("/");
+function panel_handler(req, res, _, parameters){
+	DataRetriever.getParameters(parameters["id"], function(data) {
+		panel_locals.parameters = data.parameters;
+		panel_locals.output = data.result;
+        panel_locals.parameters_and_output = data.parameters.concat(data.result);
+		// panel_locals.address = ADDRESS;
+		panel_locals.prefix = PREFIX;
+		panel_locals.experimentID = parameters["id"];
+		res.writeHead(200);
+		var panel = jade.renderFile("panel.jade", panel_locals);
+		res.write(panel);
+		res.end();
+	},
+	function(err) {
+		res.writeHead(404);
+		res.write("Error getting parameters\n");
+		res.write(err+"\n");
+		res.end();
+	})
+};
+
+function images_handler(req, res, pathname) {
+	var filename = unescape(pathname);
+	fs.readFile('.'+filename, function(error, data) {
+		if(error) {
+			res.writeHead(404);
+			res.write("File " + filename + " : not found!\n");
+			res.write(error.toString());
+			res.end();
+		}
+		else {
+			res.write(data);
+			res.end();
+		}
+	});
+};
+
+function main_handler(req, res, pathname){
+	var type = pathname.split("/")[2];
+	var resource = pathname.split("/")[1];
+	if(!type) {
+		res.write("Type of chart not specified!\n");
+		res.end();
+		return;
+	}
+	if(!ChartsMap[type]) {
+		res.write("Type of chart: '" + type + "' not supported!\n");
+		res.end();
+		return;
+	}
+	var file_path = [METHODS_DIR, type, type+"_chart_"+resource].join("/");
+	file_path += resource==="style" ? ".css" : ".js";
+
+	fs.readFile(file_path, function(error, data) {
+		if(error) {
+			res.writeHead(404);
+			res.write("File " + file_path + " : not found!\n");
+			res.write(error.toString());
+			res.end();
+		}
+		else {
+			res.write(data);
+			res.end();
+		}
+	});
+};
+
+function scripts_handler(req, res, pathname){
+	var chart_type = pathname.split("/")[2];
+	try {
+		var tag = prepare_script_tag(chart_type);
+		res.write(tag.outerHTML);
+                res.end();
+	}
+	catch(error) {
+		res.write(error.message);
+		res.end();
+	}
+};
+
+function chart_handler(req, res, pathname, parameters, userID){
+	var type = pathname.split("/")[2];
+	if(METHODS.indexOf(type) >= 0){
+		authenticate(req.headers, function(userID) {
+            DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
+            	ChartsMap[type](parameters, function(object) {
+                    logger.info("OK! Successfully authorized.");
+                    var output = jade.renderFile(chart_to_view_template(type), parameters);
+					output += object.content;
+                    res.write(output);
+                    res.end();
+                }, function(err){
+                    logger.error("User " + userID + " doesn't have access to experiment " + parameters["id"]);
+                    res.write("User " + userID + " doesn't have access to experiment " + parameters["id"]);
+                    res.end();
+                })
+			}, function(err) {
+				console.log("FAILED! Sending info about error to Scalarm... \n" + err);
+				res.write("Unable to authenticate");
+				res.end();
+			});
+		}, function(err) {
+			res.write(err);
+			res.end();
+		});
+	}
+	else {
+		res.writeHead(404);
+		res.write(type + " chart not supported!");
+		res.end();
+	}
+}
+
+function create_charts_map(){
+	var map = {};
+	for(var i in METHODS){
+	    var name = METHODS[i];
+	    map[name] = create_handler(name);
+	}
+	return map;
+}
+
+function create_handler(name){
+    return function(parameters, success, error){
+        if(validate_params(parameters)){
+            require("./visualisation_methods/" + name + "/plugin").get_handler(DataRetriever)(parameters, success, error);
+        } else {
+            error("Request parameters invalid");
+        }
+    }
+}
+
+var pattern = /^\w+$/
+function validate_params(parameters) {
+    for (var key in parameters) {
+        if(!pattern.test(parameters[key]))
+            return false;
+    }
+    return true;
+}
+
+function chart_to_view_template(type) {
+	return [METHODS_DIR, type, type+"Chart.jade"].join("/");
+}
+
+function chart_to_modal_template(type) {
+	return [METHODS_DIR, type, type+"Modal.jade"].join("/");
 }

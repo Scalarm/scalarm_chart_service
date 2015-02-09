@@ -4,30 +4,36 @@ input(placeholder="Search by name...", id="searchBox", type="text")
 ul(id="searchList")
   dl.accordion(data-accordion="")
     dd.accordion-navigation
-      each group in groups
-        a(href="#"+group.id)= group.name
-        div(id=group.id).content
-          dl
+      each group, group_id in groups
+        a(href="#"+group_id)= group.name
+        div(id=group_id).content
+          dl(style="text-align: left;").row
             each method in group.methods
-              li(id=method.name)
+              li.small-9.columns.small-centered(id=method.name, style="padding-bottom: 10px;")
                 unless method.em_class
-                  a(href="#", data-reveal-id=method.id, data-tooltip="", title=method.description)= method.name
-                    br
+                  a.tip-right.text-center(href="#", data-reveal-id=method.id, data-tooltip="", title=method.description, style="padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;")
                     img(src=method.image)
+                    hr(style="margin: 5px 0px;")
+                    span(style="padding: 0")= method.name
                 else
-                  a(href="#", em-class=method.em_class, data-reveal-id=method.id, data-tooltip="", title=method.description)= method.name
-                    br
+                  a.tip-right.text-center(href="#", title=method.description, em-class=method.em_class, data-reveal-id=method.id, data-tooltip="", style="padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;")
                     img(src=method.image)
+                    hr(style="margin: 5px 0px;")
+                    span(style="padding: 0;")= method.name
 
 //a(href="//"+address+"/style", rel="stylesheet", type="text/css")
 
-//TODO - generic
-include ./visualisation_methods/pareto/paretoModal.jade
-include ./visualisation_methods/interaction/interactionModal.jade
-include ./visualisation_methods/3d/3dModal.jade
+###INCLUDES###
 
 script.
   $(function(){
+    $("#searchList li a").mouseenter(function() {
+      $(this).css("background-color", "#EEE");
+    });
+    $("#searchList li a").mouseleave(function() {
+      $(this).css("background-color", "#f5f5f5");
+    });
+
     var ids = [];
     $('#searchList li').each(function(){
       ids.push($(this).attr("id"));

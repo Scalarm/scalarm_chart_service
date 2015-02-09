@@ -17,7 +17,6 @@ function threeD_main(i, param1, param2, param3, data) {
                     }
                 }
         }}});
-    console.log(tab);
 
     //nice feature but causes "udefined is not a function" on loading more than one chart
     // Give the points a 3D feel by adding a radial gradient

@@ -1,10 +1,8 @@
 function pareto_main(i, data) {
-	console.log(data);
 	max = data.reduce(function(prev,cur){
 		if(prev.value<cur.value) return cur;
 		else return prev;
 	})
-	console.log(max);
 	var chart = new Highcharts.Chart({
 		chart: {
 			renderTo: $('#pareto_chart_'+ i + " .chart")[0],

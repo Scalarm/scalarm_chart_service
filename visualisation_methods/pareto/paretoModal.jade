@@ -45,7 +45,7 @@ script.
           query_params += "&output="+outputParam;
           query_params += "&chart_id="+pareto_chart_counter;
 
-      $(pareto_chart_div).load("#{prefix}/pareto?"+query_params, function() { 
+      $(pareto_chart_div).load("#{prefix}/get/pareto?"+query_params, function() { 
         $('#busy_pareto').hide();
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);
