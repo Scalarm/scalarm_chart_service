@@ -11,7 +11,7 @@ var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var DataRetriever = require("./data_retriever.js");
-var LoadBalancerRegistration = require("./load_balancer_registration.js");
+var RegistrationModule = require("./registration_module.js");
 
 var config = require("./config.js");
 var panel_locals = require("./panel_locals.js");
@@ -49,12 +49,9 @@ var requests_map = prepare_map_with_requests();
 var ChartsMap = create_charts_map();
 var app = http.createServer(server_handler);
 
-LoadBalancerRegistration.retrieveDBAddress(function(address) {
+RegistrationModule.retrieveDBAddress(function(address) {
     DataRetriever.connect(address, function(){
         app.listen(PORT, function(){
-            LoadBalancerRegistration.registerChartService(function(){
-            	logger.trace("ChartService registered");
-            });
             logger.trace("Listening on port " + PORT);
         });
     }, function(){
