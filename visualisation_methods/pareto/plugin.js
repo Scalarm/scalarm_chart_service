@@ -1,13 +1,12 @@
 var info = {
     name: "Pareto",
     id: "paretoModal",
-    group: "group",
+    group: "params",
     image: "/chart/images/material_design/pareto_icon.png",
     description: "Shows significance of parameters (or interaction)"
 }
 
 function handler(dao){
-	console.log("par");
 	return function(parameters, success, error){
 	    if(parameters["id"] && parameters["chart_id"] && parameters["output"]){
 	        getPareto(dao, parameters["id"], parameters["output"], function(data) {

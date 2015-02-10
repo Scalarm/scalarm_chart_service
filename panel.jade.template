@@ -80,5 +80,5 @@ script.
         toggleable: true
       }
     });
-    $("#searchList dd>div").first().addClass("active");
+    $("#searchList dd>div").addClass("active");
   });

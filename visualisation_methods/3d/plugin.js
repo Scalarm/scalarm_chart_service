@@ -1,13 +1,12 @@
 var info = {
     name: "3D chart",
     id: "threeDModal",
-    group: "group",
+    group: "basic",
     image: "/chart/images/material_design/3dchart_icon.png",
     description: "3D charts - scatter plot"
 }
 
 function handler(dao) {
-	console.log("3d");
 	return function(parameters, success, error){
 		if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"] && parameters["param3"]) {
 	        get3d(dao, parameters["id"], parameters["param1"], parameters["param2"], parameters["param3"], function (data) {

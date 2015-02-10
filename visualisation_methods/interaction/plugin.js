@@ -1,13 +1,12 @@
 var info = {
     name: "Interaction",
     id: "interactionModal",
-    group: "group",
+    group: "params",
     image: "/chart/images/material_design/interaction_icon.png",
     description: "Shows interaction between 2 input parameters"
 };
 
 function handler(dao){
-	console.log("int");
 	return function(parameters, success, error){
 	    if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"] && parameters["output"]){
 	        getInteraction(dao, parameters["id"], parameters["param1"], parameters["param2"], parameters["output"], function(data) {

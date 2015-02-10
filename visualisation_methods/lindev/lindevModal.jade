@@ -1,0 +1,78 @@
+#lindevModal.reveal-modal(data-reveal=true)
+  section.panel.radius.analysis-chart#lindev_charts_form
+    a.close-reveal-modal &#215
+    h3.subheader Line charts (with std. dev.)
+
+    form
+      .row
+        .small-5.columns
+          label(class='inline') Select first parameter
+        .small-7.columns
+          select.firstParam
+            each parameter in parameters_and_output
+              option(value=parameter.id)= parameter.label
+      .row
+        .small-5.columns
+          label(class='inline') Select second parameter
+        .small-7.columns
+          select.secondParam
+            each parameter in parameters_and_output
+              option(value=parameter.id)= parameter.label
+
+      .row
+        ul.inline-list
+          li 
+            button.button.radius Load chart
+          li
+            img(src='#{prefix}/images/loading.gif', id='busy_lindev', size='16x16', style='display: none')
+
+  .charts
+    .scripts
+
+script.
+  $(function() {
+    $("#lindevModal").foundation("reveal", "close");
+
+    var experimentID_withLink = document.URL.split("/").slice(-1)[0];
+    var experimentID = experimentID_withLink.split("#")[0];
+    if(experimentID[experimentID.length-1]=="?")
+      experimentID = experimentID.slice(0,-1);
+    
+    var chart_counter = 0;
+    var scripts_loaded = false;
+
+    var load_chart = function(){
+      var chart_div = $("<div id=\"lindev_chart_"+chart_counter+"\">")[0];
+      $("#lindevModal .charts").prepend(chart_div);
+
+      var x_axis = $("#lindevModal .firstParam option:selected").val();
+      var y_axis = $("#lindevModal .secondParam option:selected").val();
+
+      var query_params = "id="+experimentID;
+          query_params += "&param1="+x_axis;
+          query_params += "&param2="+y_axis;
+          query_params += "&chart_id="+chart_counter;
+      $(chart_div).load("#{prefix}/get/lindev?"+query_params, function(){
+        $("#busy_lindev").hide();
+        var targetOffset = $(this).offset().top;
+        $('html,body').animate({ scrollTop: targetOffset }, 1000);
+      });
+      chart_counter++;
+    }
+
+    $("#lindevModal button").bind("click", function() {
+      $("#busy_lindev").show();
+      if(!scripts_loaded) {
+        $("#lindevModal .scripts").load("#{prefix}/scripts/lindev", function(){
+          load_chart();
+          scripts_loaded = true;
+        });
+      }
+
+      else{
+        load_chart();
+      }
+
+      return false;
+    })
+  })
