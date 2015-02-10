@@ -5,6 +5,7 @@ var fs = require("fs");
 var querystring = require("querystring");
 var exec = require("child_process").exec;
 var parseCookies = require("cookie").parse;
+var util = require("util");
 
 var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
@@ -281,8 +282,8 @@ function chart_handler(req, res, pathname, parameters, userID){
                     res.write(output);
                     res.end();
                 }, function(err){
-                    logger.error("User " + userID + " doesn't have access to experiment " + parameters["id"]);
-                    res.write("User " + userID + " doesn't have access to experiment " + parameters["id"]);
+                	logger.error("userID: " + userID + " experimentID: " +  parameters["id"] + " --> " + err);
+                	res.write(auto_removing_tag(parameters["id"], err, 3000));
                     res.end();
                 })
 			}, function(err) {
@@ -336,4 +337,15 @@ function chart_to_view_template(type) {
 
 function chart_to_modal_template(type) {
 	return [METHODS_DIR, type, type+"Modal.jade"].join("/");
+}
+
+function auto_removing_tag(id, message, timeout) {
+	return util.format(" \
+		<span id=\"%s\"> %s \
+			<script> \
+				setTimeout(function() { \
+					$(\"#%s\").remove(); \
+				}, %d); \
+			</script> \
+		</span>", id, message, id, timeout);
 }
