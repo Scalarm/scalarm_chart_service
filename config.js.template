@@ -3,8 +3,7 @@ module.exports = {
 	server_port: 8080,
 	server_prefix: "/chart",		//suffix?
 	db_url: "mongodb://<<DB_IP>>:27017/scalarm_db",
-	information_service_address: <<IS_ADDRESS>>,
-	information_service_port: <<IS_PORT>>,
+	information_service_address: process.env.INFORMATION_SERVICE_URL,
 	multicast_address: "224.1.2.3",
 	multicast_port: 8000,
 	log_filename: <<LOG_FILENAME>>

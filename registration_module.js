@@ -2,26 +2,14 @@ var config = require("./config.js");
 var dgram = require("dgram");
 var client = dgram.createSocket("udp4");
 var fs = require("fs");
+//warunkowe requirowane!
 var https = require("https");
 var http = require("http");
-var LBaddress;
 
 module.exports.retrieveDBAddress = function(callback) {
-  if(config.multicast_address && config.multicast_port) {
-    retrieveLBAddress(function() {
-      console.log("LBaddress retrieved: " + LBaddress);
-      registerChartServiceInLoadBalancer(function() {
-        console.log("ChartService registered in LB");
-      });
-    });
-  }
-
-  var options = {
-    host: config.information_service_address,
-    port: config.information_service_port,
-    path: '/db_routers',
-  };
-  http.get(options, function(res) {
+  //warunek information_service_development: true - wtedy ladowanie http, unless https
+  var address = "http://"+config.information_service_address+"/db_routers"
+  http.get(address, function(res) {
     var data = "";
 
     res.on("data", function(chunk) {
@@ -29,10 +17,12 @@ module.exports.retrieveDBAddress = function(callback) {
     });
 
     res.on("end", function() {
+      //try catch na JSON.parse(data) - wypisac jaki jest blad i na koncu rzucic wyjatkiem (wiecej bledu)
       var addresses = JSON.parse(data);
       var addressDB;
       if(addresses.length>0) {
         var chosenAddress = addresses[Math.floor(Math.random()*addresses.length)];
+        //wyciagnac /scalarm_db jako zmienna (niekoniecznie config)
         addressDB = "mongodb://" + chosenAddress + "/scalarm_db";
       }
       else {
@@ -44,7 +34,8 @@ module.exports.retrieveDBAddress = function(callback) {
   });
 };
 
-function retrieveLBAddress(callback) {
+module.exports.retrieveLBAddress = function(callback) {
+  //jesli jest zamkniety port to zrobic petle na np. 10 prob co 5 sekund
   client.bind(config.multicast_port);
 
   client.on("listening", function() {
@@ -54,14 +45,14 @@ function retrieveLBAddress(callback) {
   client.on("message", function(message, remote) {
     console.log("LB multicasted address: ", message.toString());
     if (LBaddress===undefined) {
-      LBaddress = message.toString();
-      client.close();
-      callback();
+      var LBaddress = message.toString();
+      client.close(); //sprawdzic czy client.close jest blokujace!
+      callback(LBaddress);
     }
   })
 }
 
-function registerChartServiceInLoadBalancer(callback){
+module.exports.registerChartServiceInLoadBalancer = function(LBaddress){
 //    var data = querystring.stringify({
 //        name: "ChartService",
 //        address: config.server_ip + ":" + config.server_port
@@ -82,6 +73,6 @@ function registerChartServiceInLoadBalancer(callback){
         })
     });
 
+    //ewentualnie rzucac wyjatkiem jak sie nie udalo zarejestrowac
     post_req.end();
-    callback();
 };

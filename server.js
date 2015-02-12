@@ -49,6 +49,13 @@ var requests_map = prepare_map_with_requests();
 var ChartsMap = create_charts_map();
 var app = http.createServer(server_handler);
 
+
+if(config.multicast_address && config.multicast_port) {
+    RegistrationModule.retrieveLBAddress(function(LBaddress) {
+      RegistrationModule.registerChartServiceInLoadBalancer(LBaddress);      
+    });
+}
+
 RegistrationModule.retrieveDBAddress(function(address) {
     DataRetriever.connect(address, function(){
         app.listen(PORT, function(){
@@ -336,13 +343,15 @@ function chart_to_modal_template(type) {
 	return [METHODS_DIR, type, type+"Modal.jade"].join("/");
 }
 
+//TODO - wyescapowac message (zeby nie mozna bylo uruhcomic)
 function auto_removing_tag(id, message, timeout) {
 	return util.format(" \
 		<span id=\"%s\"> %s \
 			<script> \
+				toastr.error(\"%s\"); \
 				setTimeout(function() { \
 					$(\"#%s\").remove(); \
 				}, %d); \
 			</script> \
-		</span>", id, message, id, timeout);
+		</span>", id, message, message, id, timeout);
 }
