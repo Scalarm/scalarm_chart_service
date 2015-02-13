@@ -37,15 +37,17 @@ var connect = function(address, success, error){
 
 					var new_args = {};
 					for(var i = 0; i<args.length; i++){
-						new_args[args[i]] = parseInt(values[i]);
-						// args.push({
-						// 	name: arguments[i],
-						// 	value: values[i]
-						// });
+						new_args[args[i]] = parseFloat(values[i]); //parseInt
 					}
 
 					data.arguments = new_args;
 					delete data.values;
+
+					// for(var key in data.result){
+     //                	if(!Number.isNaN(parseFloat(data.result[key]))){
+     //                    	data.result[key] = parseFloat(data.result[key]);
+     //                    }
+     //                };
 
 					return data;
 				})
@@ -126,29 +128,48 @@ var connect = function(address, success, error){
 					error(err.toString());
                     return;
 				}
-	        	collection.findOne(filter, function(err, item) {
+	        	collection.findOne(filter, fields, function(err, item) {
 	        		data["result"] = [];
 	        		if(item){
 	        			for(var k in item.result){
-	        				if(typeof item["result"][k] == "number") {
+	        				if(!Number.isNaN(parseFloat(item["result"][k]))){
                                 data["result"].push({
                                     label: (k[0].toUpperCase() + k.slice(1)).split("_").join(" "),
                                     id: k
                                 });
-                            }
-	        			}
-	        		}
-		            db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
+                            };
+	        			};
+	        		};
+		            db.collection("experiments").findOne({"experiment_id": mongo.ObjectID(experimentID)}, function(err, doc){
 						if (err) error(err.toString());
-						if(array[0]){
-							//TODO - get parameters from all gruops
-							var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
-							data["parameters"] = parameters.map(function(param){
-								return {
-											label: param["label"],
-											id:    param["id"]
-									   };
-							})
+						if(doc){
+                            data["parameters"] = [];
+                            var experiment_input = doc["experiment_input"];
+							for (var i in experiment_input){
+                                var category = experiment_input[i];
+                                var category_id = category["id"];
+                                var category_label = category["label"];
+                                var groups = category["entities"];
+                                for (var j in groups){
+                                    var group = groups[j];
+                                    var group_id = group["id"];
+                                    var group_label = group["label"];
+                                    var parameters = group["parameters"];
+                                    for(var k in parameters){
+                                        var parameter = parameters[k];
+                                        var parameter_id = parameter["id"];
+                                        var parameter_label = parameter["label"];
+
+                                        var labels = [category_label, group_label, parameter_label].filter(function(obj){return obj != undefined;});
+                                        var ids = [category_id, group_id, parameter_id].filter(function(obj){return obj != undefined;});
+                                        data["parameters"].push({
+                                            label: labels.join(" - "),
+                                            id: ids.join("___")
+                                        });
+                                    }
+                                }
+                            }
+
 							success(data);
 						}
 						else{
