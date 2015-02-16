@@ -1,4 +1,4 @@
-var methods = ["interaction", "pareto", "3d", "lindev"];
+var methods = ["interaction", "pareto", "3d", "lindev", "clustering"];
 
 var groups = 
 	{

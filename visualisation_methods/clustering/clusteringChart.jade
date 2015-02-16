@@ -1,0 +1,12 @@
+extends ../templateChart
+block vars
+  - var subheader = "Clustering chart";
+  
+block script
+  script.
+    $(function() {
+      var div_id = "#clustering_chart_#{chart_id}";
+      $(div_id + " .button").on('click', function() {
+        $(div_id).remove();
+      });
+    });

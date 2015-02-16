@@ -1,0 +1,65 @@
+#clusteringModal.reveal-modal(data-reveal=true)
+  section.panel.radius.analysis-chart#clustering_charts_form
+    a.close-reveal-modal &#215
+    h3.subheader Clustering charts
+
+    form
+      .row
+        .small-5.columns
+          label(class='inline') Select output parameter
+        .small-7.columns
+          select.outputParam
+            each parameter in output
+              option(value=parameter.id)= parameter.label
+
+      .row
+        ul.inline-list
+          li
+            button.button.radius Load chart
+            //t('charts.load_button')
+          li
+            img(src='#{prefix}/images/loading.gif', id='busy_clustering', size='16x16', style='display: none')
+
+  .charts
+    .scripts
+
+script.
+  $(function() {
+    $("#clusteringModal").foundation("reveal", "close");
+
+    var experimentID = "#{experimentID}";
+    var clustering_chart_counter = 0;
+    var scripts_loaded = false;
+
+    var load_chart = function() {
+      var clustering_chart_div = $("<div id=\"clustering_chart_"+clustering_chart_counter+"\">")[0];
+      $("#clusteringModal .charts").prepend(clustering_chart_div);
+      //TODO - if there's nothing to select -> do nothing
+      var output_param = $("#clusteringModal .outputParam option:selected").val();
+      var query_params = "id="+experimentID;
+          query_params += "&output="+output_param;
+          query_params += "&chart_id="+clustering_chart_counter;
+      $(clustering_chart_div).load("#{prefix}/get/clustering?"+query_params, function(){
+        $("#busy_clustering").hide();
+    
+        var targetOffset = $(this).offset().top;
+        $('html,body').animate({ scrollTop: targetOffset }, 1000);
+      });
+      clustering_chart_counter++;
+    }
+
+    $("#clusteringModal button").bind("click", function() {
+      $("#busy_clustering").show();
+      if(!scripts_loaded) {
+        $("#clusteringModal .scripts").load("#{prefix}/scripts/clustering", function() {
+          load_chart();
+          scripts_loaded = true;
+        });
+      }
+      else {
+        load_chart();
+      }
+
+      return false;
+    })
+  })
