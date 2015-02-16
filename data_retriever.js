@@ -26,11 +26,7 @@ var connect = function(address, success, error){
 					error("No such experiment or no runs done");
 					return;
 				}
-
-				var args_fullnamed = array[0].arguments.split(',');
-				var args = args_fullnamed.map(function(arg){ 
-					return arg.split('___').slice(-1)[0];
-				});
+				var args = array[0].arguments.split(',');
 
 				array = array.map(function(data){
 					var values = data.values.split(',');
@@ -43,11 +39,11 @@ var connect = function(address, success, error){
 					data.arguments = new_args;
 					delete data.values;
 
-					// for(var key in data.result){
-     //                	if(!Number.isNaN(parseFloat(data.result[key]))){
-     //                    	data.result[key] = parseFloat(data.result[key]);
-     //                    }
-     //                };
+					for(var key in data.result){
+                    	if(!Number.isNaN(parseFloat(data.result[key]))){
+                        	data.result[key] = parseFloat(data.result[key]);
+                        }
+                    };
 
 					return data;
 				})
