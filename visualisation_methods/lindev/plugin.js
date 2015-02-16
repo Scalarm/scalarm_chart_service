@@ -1,5 +1,5 @@
 var info = {
-	name: "Line chart with std dev",
+	name: "Line chart",
 	id: "lindevModal",
 	group: "basic",
 	image: "/chart/images/material_design/lindev_icon.png",
