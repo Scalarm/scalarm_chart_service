@@ -4,7 +4,7 @@ Scalarm Chart Service
 Installation guide
 ------------------
 1. Install dependencies:
-   	* Node.js - via package manager:
+   	* Node.js - via package manager [[link](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)]:
 
 			curl -sL https://deb.nodesource.com/setup | sudo bash -
 			sudo apt-get install -y nodejs
@@ -75,10 +75,6 @@ Installation guide
 		* *cipherName*: ciphering algorithm
 
 > Please make sure that on the machine is installed ruby - this requirement is necessary for working the whole module!
-
-Links:
-------
-* https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
 
 Running
 -----------------
