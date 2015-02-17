@@ -6,12 +6,12 @@ Installation guide
 1. Install dependencies:
    	* Node.js - via package manager:
 
-		curl -sL https://deb.nodesource.com/setup | sudo bash -
-		sudo apt-get install -y nodejs
+			curl -sL https://deb.nodesource.com/setup | sudo bash -
+			sudo apt-get install -y nodejs
 
 	* libraries required by npm for building:
 
-		sudo apt-get install build-essential
+			sudo apt-get install build-essential
 
 2. Download Scalarm Chart Service from repository:
 	* using git:
