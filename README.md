@@ -91,6 +91,6 @@ API
 * /status - used to check service avaiability, required only when working with Scalarm Load Balancer
 * /panel - returns analysis panel and modals for charts
 * /images/:path\_to\_file - returns requested image
-* /main/:chart_type - static share of script file for requested 
+* /main/:chart_type - shares script file for requested chart type
 * /scripts/:chart_type - returns script tag required for requested chart type
 * /get/:chart_type - returns script for creating requested chart type in accordance with parameters passed as query string
