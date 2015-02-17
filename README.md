@@ -82,9 +82,18 @@ Links:
 
 Running
 -----------------
-npm start
-npm stop
-rejestracja w IS?
+
+Starting server: `npm start`
+
+Stopping server: `npm stop`
+
+> Using *information_service.sh* requires environment variables: INFORMATION\_SERVICE\_URL, INFORMATION\_SERVICE\_LOGIN, INFORMATION\_SERVICE\_PASSWORD.
+
+> In commands below replace ADDRESS with IP address of your machine.
+
+Registering service in Scalarm Information Service: `./information_service.sh ADDRESS`
+
+Deregistering service in Scalarm Information Service: `./information_service.sh ADDRESS deregister`
 
 API
 -------------------
