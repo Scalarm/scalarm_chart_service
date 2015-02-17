@@ -20,7 +20,9 @@ Installation guide
 		
 	* using wget:
 
-			wget https://github.com/Scalarm/scalarm_chart_service/archive/master.zip -O scalarm_chart_service.zip && unzip scalarm_chart_service.zip -d scalarm_chart_service/ && rm scalarm_chart_service.zip
+			wget https://github.com/Scalarm/scalarm_chart_service/archive/master.zip -O scalarm_chart_service.zip
+			unzip scalarm_chart_service.zip -d scalarm_chart_service/
+			rm scalarm_chart_service.zip
 
 3. Install npm dependencies:
 
