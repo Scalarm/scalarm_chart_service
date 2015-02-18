@@ -187,6 +187,7 @@ function prepare_map_with_requests() {
 	map["main"] = main_handler;
 	map["scripts"] = scripts_handler;
 	map["get"] = chart_handler;
+	map["moes"] = moes_handler;
 	return map;
 }
 
@@ -301,6 +302,24 @@ function chart_handler(req, res, pathname, parameters, userID){
 		res.write(type + " chart not supported!");
 		res.end();
 	}
+}
+
+function moes_handler(req, res, _, parameters, userID){
+	DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
+		DataRetriever.getParameters(parameters["id"], function(data) {
+			res.write(JSON.stringify(data.result));
+			res.end();
+		},
+		function(err) {
+			res.writeHead(404);
+			res.write("Error getting parameters\n");
+			res.write(err+"\n");
+			res.end();
+		})
+	}, function(){
+	    console.log("Error checking experiment's affiliation");
+	    res.write("You don't have access to experiment " + parameters["id"]);
+	});
 }
 
 function create_charts_map(){
