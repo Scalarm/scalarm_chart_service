@@ -28,13 +28,9 @@ script.
   $(function(){
     $("#paretoModal").foundation("reveal", "close");
 
+    var experimentID = "#{experimentID}";
     var pareto_chart_counter = 0;
     var scripts_loaded = false;
-
-    var experimentID_withLink = document.URL.split("/").slice(-1)[0];
-    var experimentID = experimentID_withLink.split("#")[0];
-    if(experimentID[experimentID.length-1]=="?")
-      experimentID = experimentID.slice(0,-1);
 
     var load_chart = function() {
       var pareto_chart_div = $("<div id=\"pareto_chart_"+pareto_chart_counter+"\">")[0];

@@ -41,11 +41,7 @@ script.
   $(function() {
     $("#interactionModal").foundation("reveal", "close");
 
-    var experimentID_withLink = document.URL.split("/").slice(-1)[0];
-    var experimentID = experimentID_withLink.split("#")[0];
-    if(experimentID[experimentID.length-1]=="?")
-      experimentID = experimentID.slice(0,-1);
-    
+    var experimentID = "#{experimentID}";
     var interaction_chart_counter = 0;
     var scripts_loaded = false;
 
