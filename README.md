@@ -35,7 +35,8 @@ Installation guide
 				server_ip: <<SERVER_IP>>,
 				server_port: 8080,
 				server_prefix: "/chart",
-				db_url: "mongodb://<<DB_IP>>:27017/scalarm_db",
+				information_service_address: process.env.INFORMATION_SERVICE_URL,
+				information_service_development: true,
 				multicast_address: "224.1.2.3",
 				multicast_port: 8000,
 				log_filename: <<LOG_FILENAME>>
@@ -47,7 +48,8 @@ Installation guide
 		* *server_ip*: IP address of Chart Service 
 		* *server_port*: port of Chart Service
 		* *server_prefix*: prefix added to every link generated from Chart Service (for load balancing)
-		* *db_url*: database address 
+		* *information_service_address*: IP address of Information Service
+		*  *information_service_development*: flag when using Information Service in development mode
 		* *multicast_address*: multicast address on which Load Balancer send messages
 		* *multicast_port*: multicast port on which Load Balancer send messages
 		* *log_filename*: name of the log file
@@ -56,7 +58,7 @@ Installation guide
 	* **decoder_configuration.js.template**
 	
 			module.exports = {
-				secret_key_base: "<<SECRET_KEY_BASE>>",
+				secret_key_base: process.env.INFORMATION_SERVICE_URL,
 				encrypted_cookie_salt: "<<COOKIE_SALT>>",
 				encrypted_signed_cookie_salt: "<<SIGNED_COOKIE_SALT>>",
 				iterations: 1000,
@@ -96,6 +98,6 @@ API
 * /status - used to check service avaiability, required only when working with Scalarm Load Balancer
 * /panel - returns analysis panel and modals for charts
 * /images/:path\_to\_file - returns requested image
-* /main/:chart_type - shares script file for requested chart type
-* /scripts/:chart_type - returns script tag required for requested chart type
-* /get/:chart_type - returns script for creating requested chart type in accordance with parameters passed as query string
+* /scripts/:chart_type - shares script file for requested chart type
+* /script_tags/:chart_type - returns script tag required for requested chart type
+* /chart_instances/:chart_type - returns script for creating requested chart type in accordance with parameters passed as query string
