@@ -24,7 +24,7 @@ function lindev_main(i, param1, param2, data) {
             shared: true
         },
         series: [{
-            name: 'series',
+            name: param2 + " (mean)",
             data: data[0],
             tooltip: {
                 pointFormat: '<span style="font-weight: bold; color: {series.color}">{series.name}</span>: <b>{point.y:.1f}</b> '
