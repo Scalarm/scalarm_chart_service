@@ -23,7 +23,7 @@
         .small-5.columns
           label(class='inline') Select output parameter
         .small-7.columns
-          select.outputParam
+          select.outputParam.moes
             each parameter in output
               option(value=parameter.id)= parameter.label
 
@@ -41,7 +41,6 @@ script.
   $(function() {
     $("#interactionModal").foundation("reveal", "close");
 
-    var experimentID = "#{experimentID}";
     var interaction_chart_counter = 0;
     var scripts_loaded = false;
 
@@ -54,7 +53,7 @@ script.
       var y_axis = $("#interactionModal .secondParam option:selected").val();
       var outputParam = $("#interactionModal .outputParam option:selected").val();
 
-      var query_params = "id="+experimentID;
+      var query_params = "id=#{experimentID}";
           query_params += "&param1="+x_axis;
           query_params += "&param2="+y_axis;
           query_params += "&output="+outputParam;

@@ -8,7 +8,7 @@
         .small-5.columns
           label(class='inline') Select output parameter
         .small-7.columns
-          select.outputParam
+          select.outputParam.moes
             each parameter in output
               option(value=parameter.id)= parameter.label
 
@@ -28,7 +28,6 @@ script.
   $(function(){
     $("#paretoModal").foundation("reveal", "close");
 
-    var experimentID = "#{experimentID}";
     var pareto_chart_counter = 0;
     var scripts_loaded = false;
 
@@ -37,7 +36,7 @@ script.
       $("#paretoModal .charts").prepend(pareto_chart_div);
       
       var outputParam = $("#paretoModal .outputParam option:selected").val();
-      var query_params = "id="+experimentID;
+      var query_params = "id=#{experimentID}";
           query_params += "&output="+outputParam;
           query_params += "&chart_id="+pareto_chart_counter;
 

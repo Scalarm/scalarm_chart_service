@@ -81,4 +81,20 @@ script.
       }
     });
     $("#searchList dd>div").addClass("active");
+
+    function update_moes(){
+      var moes = $(".moes");
+      var moes_and_params = $(".moes_and_params");
+      var moes_values = moes.children().map(function() { return $(this).attr("value"); }).toArray();
+      $.getJSON('#{prefix}/moes?id=#{experimentID}', function(data){
+        data.map(function(d){
+          if(moes_values.indexOf(d.id)){
+            var option = "<option value=" + d.id + ">" + d.label + "</option";
+            moes.append(option);
+            moes_and_params.append(option);
+          }
+        });
+      });
+    }
+    setInterval(update_moes, 3000);
   });
