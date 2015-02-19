@@ -176,7 +176,7 @@ function prepare_script_tag(typeOfChart) {
 	if(ChartsMap[typeOfChart]) {
 	    var tag = jsdom.createElement("script");
 	    tag.setAttribute("type", "text/javascript");
-	    tag.setAttribute("src",[PREFIX, "main", typeOfChart].join("/"));
+	    tag.setAttribute("src",[PREFIX, "scripts", typeOfChart].join("/"));
 	    return tag;
 	}
 	else {
@@ -188,9 +188,9 @@ function prepare_map_with_requests() {
 	var map = {};
 	map["panel"] = panel_handler;
 	map["images"] = images_handler;
-	map["main"] = main_handler;
 	map["scripts"] = scripts_handler;
-	map["get"] = chart_handler;
+	map["script_tags"] = script_tags_handler;
+	map["chart_instances"] = chart_handler;
 	map["moes"] = moes_handler;
 	return map;
 }
@@ -230,9 +230,8 @@ function images_handler(req, res, pathname) {
 	});
 };
 
-function main_handler(req, res, pathname){
+function scripts_handler(req, res, pathname){
 	var type = pathname.split("/")[2];
-	var resource = pathname.split("/")[1];
 	if(!type) {
 		res.write("Type of chart not specified!\n");
 		res.end();
@@ -243,9 +242,7 @@ function main_handler(req, res, pathname){
 		res.end();
 		return;
 	}
-	var file_path = [METHODS_DIR, type, type+"_chart_"+resource].join("/");
-	file_path += resource==="style" ? ".css" : ".js";
-
+	var file_path = [METHODS_DIR, type, type+"_chart.js"].join("/");
 	fs.readFile(file_path, function(error, data) {
 		if(error) {
 			res.writeHead(404);
@@ -260,7 +257,7 @@ function main_handler(req, res, pathname){
 	});
 };
 
-function scripts_handler(req, res, pathname){
+function script_tags_handler(req, res, pathname){
 	var chart_type = pathname.split("/")[2];
 	try {
 		var tag = prepare_script_tag(chart_type);

@@ -40,7 +40,7 @@ script.
           query_params += "&output="+outputParam;
           query_params += "&chart_id="+pareto_chart_counter;
 
-      $(pareto_chart_div).load("#{prefix}/get/pareto?"+query_params, function() { 
+      $(pareto_chart_div).load("#{prefix}/chart_instances/pareto?"+query_params, function() { 
         $('#busy_pareto').hide();
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);
@@ -52,7 +52,7 @@ script.
     $('#pareto_charts_form button').bind('click', function() {
       $('#busy_pareto').show();
       if(!scripts_loaded){
-        $("#paretoModal .scripts").load("#{prefix}/scripts/pareto", function() {
+        $("#paretoModal .scripts").load("#{prefix}/script_tags/pareto", function() {
           load_chart();
           scripts_loaded = true;
         });

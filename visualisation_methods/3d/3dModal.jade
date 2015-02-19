@@ -68,7 +68,7 @@ script.
           query_params += "&param2="+y_axis;
           query_params += "&param3="+z_axis;
       query_params += "&chart_id="+three_d_chart_counter;
-      $(three_d_chart_div).load("#{prefix}/get/3d?"+query_params, function(){
+      $(three_d_chart_div).load("#{prefix}/chart_instances/3d?"+query_params, function(){
         $("#busy_3d").hide();
     
         var targetOffset = $(this).offset().top;
@@ -80,7 +80,7 @@ script.
     $("#threeDModal button").bind("click", function() {
       $("#busy_3d").show();
       if(!scripts_loaded) {
-        $("#threeDModal .scripts").load("#{prefix}/scripts/3d", function() {
+        $("#threeDModal .scripts").load("#{prefix}/script_tags/3d", function() {
           load_chart();
           scripts_loaded = true;
         });

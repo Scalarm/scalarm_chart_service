@@ -55,7 +55,7 @@ script.
           query_params += "&param1="+x_axis;
           query_params += "&param2="+y_axis;
           query_params += "&chart_id="+chart_counter;
-      $(chart_div).load("#{prefix}/get/lindev?"+query_params, function(){
+      $(chart_div).load("#{prefix}/chart_instances/lindev?"+query_params, function(){
         $("#busy_lindev").hide();
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);
@@ -66,7 +66,7 @@ script.
     $("#lindevModal button").bind("click", function() {
       $("#busy_lindev").show();
       if(!scripts_loaded) {
-        $("#lindevModal .scripts").load("#{prefix}/scripts/lindev", function(){
+        $("#lindevModal .scripts").load("#{prefix}/script_tags/lindev", function(){
           load_chart();
           scripts_loaded = true;
         });
