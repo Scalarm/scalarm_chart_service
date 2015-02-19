@@ -8,24 +8,36 @@
         .small-5.columns
           label(class='inline') Select first parameter
         .small-7.columns
-          select.firstParam.moes_and_params
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+          select.firstParam
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup.moes(label="MoEs")
+              each output in outputs
+                option(value=output.id)= output.label
       .row
         .small-5.columns
           label(class='inline') Select second parameter
         .small-7.columns
-          select.secondParam.moes_and_params
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+          select.secondParam
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup.moes(label="MoEs")
+              each output in outputs
+                option(value=output.id)= output.label
 
       .row
         .small-5.columns
           label(class='inline') Select third parameter
         .small-7.columns
-          select.thirdParam.moes_and_params
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+          select.thirdParam
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup.moes(label="MoEs")
+              each output in outputs
+                option(value=output.id)= output.label
 
       .row
         ul.inline-list

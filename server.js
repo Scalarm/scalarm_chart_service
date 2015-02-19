@@ -198,9 +198,7 @@ function prepare_map_with_requests() {
 function panel_handler(req, res, _, parameters){
 	DataRetriever.getParameters(parameters["id"], function(data) {
 		panel_locals.parameters = data.parameters;
-		panel_locals.output = data.result;
-        panel_locals.parameters_and_output = data.parameters.concat(data.result);
-		// panel_locals.address = ADDRESS;
+		panel_locals.outputs = data.result;
 		panel_locals.prefix = PREFIX;
 		panel_locals.experimentID = parameters["id"];
 		res.writeHead(200);

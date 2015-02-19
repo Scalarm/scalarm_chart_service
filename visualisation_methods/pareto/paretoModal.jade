@@ -9,8 +9,8 @@
           label(class='inline') Select output parameter
         .small-7.columns
           select.outputParam.moes
-            each parameter in output
-              option(value=parameter.id)= parameter.label
+            each output in outputs
+              option(value=output.id)= output.label
 
       .row
         ul.inline-list
