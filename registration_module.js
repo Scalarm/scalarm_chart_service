@@ -2,12 +2,21 @@ var config = require("./config.js");
 var dgram = require("dgram");
 var client = dgram.createSocket("udp4");
 var fs = require("fs");
-//warunkowe requirowane!
-var https = require("https");
 var http = require("http");
+var https = require("https");
+
+var log4js = require("log4js");
+log4js.configure({
+  appenders: [
+    { type: 'file', filename: config.log_filename, category: ['console', 'registration_module.js'] }
+  ],
+  replaceConsole: true
+});
+var logger = log4js.getLogger("registration_module.js");
+
+var DB_NAME = "/scalarm_db";
 
 module.exports.retrieveDBAddress = function(callback) {
-  //warunek information_service_development: true - wtedy ladowanie http, unless https
   var address = "http://"+config.information_service_address+"/db_routers"
   http.get(address, function(res) {
     var data = "";
@@ -17,16 +26,20 @@ module.exports.retrieveDBAddress = function(callback) {
     });
 
     res.on("end", function() {
-      //try catch na JSON.parse(data) - wypisac jaki jest blad i na koncu rzucic wyjatkiem (wiecej bledu)
-      var addresses = JSON.parse(data);
+      try {
+        var addresses = JSON.parse(data);
+      }
+      catch (error) {
+        logger.error("Could not parse json: " + error);
+        throw error;
+      }
       var addressDB;
       if(addresses.length>0) {
         var chosenAddress = addresses[Math.floor(Math.random()*addresses.length)];
-        //wyciagnac /scalarm_db jako zmienna (niekoniecznie config)
-        addressDB = "mongodb://" + chosenAddress + "/scalarm_db";
+        addressDB = "mongodb://" + chosenAddress + DB_NAME;
       }
       else {
-        addressDB = "mongodb://localhost:27017/scalarm_db";
+        addressDB = "mongodb://localhost:27017" + DB_NAME;
       }
       console.log("Retrieved database address: ", addressDB);
       callback(addressDB);
