@@ -1,4 +1,3 @@
-//var DBURL = require("./config.js").db_url;
 var COLLECTION_NAME = "experiment_instances_";
 var CAPPED_COLLECTION_NAME = "experiment_progress_notifications";
 var mongo = require('mongodb');

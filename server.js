@@ -11,7 +11,7 @@ var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var DataRetriever = require("./data_retriever.js");
-var LoadBalancerRegistration = require("./load_balancer_registration.js");
+var RegistrationModule = require("./registration_module.js");
 
 var config = require("./config.js");
 var panel_locals = require("./panel_locals.js");
@@ -49,12 +49,16 @@ var requests_map = prepare_map_with_requests();
 var ChartsMap = create_charts_map();
 var app = http.createServer(server_handler);
 
-LoadBalancerRegistration.retrieveDBAddress(function(address) {
+
+if(config.multicast_address && config.multicast_port) {
+    RegistrationModule.retrieveLBAddress(function(LBaddress) {
+      RegistrationModule.registerChartServiceInLoadBalancer(LBaddress);      
+    });
+}
+
+RegistrationModule.retrieveDBAddress(function(address) {
     DataRetriever.connect(address, function(){
         app.listen(PORT, function(){
-            LoadBalancerRegistration.registerChartService(function(){
-            	logger.trace("ChartService registered");
-            });
             logger.trace("Listening on port " + PORT);
         });
     }, function(){
@@ -187,15 +191,14 @@ function prepare_map_with_requests() {
 	map["main"] = main_handler;
 	map["scripts"] = scripts_handler;
 	map["get"] = chart_handler;
+	map["moes"] = moes_handler;
 	return map;
 }
 
 function panel_handler(req, res, _, parameters){
 	DataRetriever.getParameters(parameters["id"], function(data) {
 		panel_locals.parameters = data.parameters;
-		panel_locals.output = data.result;
-        panel_locals.parameters_and_output = data.parameters.concat(data.result);
-		// panel_locals.address = ADDRESS;
+		panel_locals.outputs = data.result;
 		panel_locals.prefix = PREFIX;
 		panel_locals.experimentID = parameters["id"];
 		res.writeHead(200);
@@ -303,6 +306,24 @@ function chart_handler(req, res, pathname, parameters, userID){
 	}
 }
 
+function moes_handler(req, res, _, parameters, userID){
+	DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
+		DataRetriever.getParameters(parameters["id"], function(data) {
+			res.write(JSON.stringify(data.result));
+			res.end();
+		},
+		function(err) {
+			res.writeHead(404);
+			res.write("Error getting parameters\n");
+			res.write(err+"\n");
+			res.end();
+		})
+	}, function(){
+	    console.log("Error checking experiment's affiliation");
+	    res.write("You don't have access to experiment " + parameters["id"]);
+	});
+}
+
 function create_charts_map(){
 	var map = {};
 	for(var i in METHODS){
@@ -339,13 +360,15 @@ function chart_to_modal_template(type) {
 	return [METHODS_DIR, type, type+"Modal.jade"].join("/");
 }
 
+//TODO - wyescapowac message (zeby nie mozna bylo uruhcomic)
 function auto_removing_tag(id, message, timeout) {
 	return util.format(" \
 		<span id=\"%s\"> %s \
 			<script> \
+				toastr.error(\"%s\"); \
 				setTimeout(function() { \
 					$(\"#%s\").remove(); \
 				}, %d); \
 			</script> \
-		</span>", id, message, id, timeout);
+		</span>", id, message, message, id, timeout);
 }
