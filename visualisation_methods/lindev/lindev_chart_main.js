@@ -8,7 +8,7 @@ function lindev_main(i, param1, param2, data) {
             enabled: false
         },
         title: {
-            text: "Line chart with std. dev."
+            text: "Line chart - " + param1 + " vs " + param2
         },
         xAxis: {
             title: {

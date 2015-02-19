@@ -1,5 +1,5 @@
 var info = {
-	name: "Line chart with std dev",
+	name: "Line chart",
 	id: "lindevModal",
 	group: "basic",
 	image: "/chart/images/material_design/lindev_icon.png",
@@ -50,6 +50,7 @@ function getLinDev(dao, id, param1, param2, success, error){
 			var mean = sum/grouped_by_param1[index].length;
 			values.push([parseFloat(index), mean]);
 		}
+		values = values.sort(function(a, b) { return a[0]-b[0]; });
 
 		var with_stddev = [];
 		for(var index in grouped_by_param1) {
@@ -63,6 +64,8 @@ function getLinDev(dao, id, param1, param2, success, error){
 			var sd = Math.sqrt(partial_sd/grouped_by_param1[index].length);
 			with_stddev.push([parseFloat(index), mean-sd, mean+sd]);
 		}
+		with_stddev = with_stddev.sort(function(a, b) { return a[0]-b[0]; });
+
 		success([values, with_stddev]);
 	}, error);
 }
