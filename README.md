@@ -58,7 +58,7 @@ Installation guide
 	* **decoder_configuration.js.template**
 	
 			module.exports = {
-				secret_key_base: process.env.INFORMATION_SERVICE_URL,
+				secret_key_base: process.env.SECRET_KEY_BASE,
 				encrypted_cookie_salt: "<<COOKIE_SALT>>",
 				encrypted_signed_cookie_salt: "<<SIGNED_COOKIE_SALT>>",
 				iterations: 1000,
