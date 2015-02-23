@@ -137,6 +137,7 @@ function ws_handler(request) {
 }
 
 function authenticate(headers, success, error){
+	console.time("[AUTH_COOKIE]");
     var cookies = headers.cookie;
     if(cookies) {
     	var cookie = parseCookies(cookies)["_scalarm_session"];
@@ -152,6 +153,7 @@ function authenticate(headers, success, error){
                 return;
             }
             var userID = JSON.parse(stdout)["user"];
+            console.timeEnd("[AUTH_COOKIE]");
             success(userID);
         });
     }
@@ -271,28 +273,25 @@ function script_tags_handler(req, res, pathname){
 };
 
 function chart_handler(req, res, pathname, parameters, userID){
+	console.time("[REQ]");
 	var type = pathname.split("/")[2];
 	if(METHODS.indexOf(type) >= 0){
-		authenticate(req.headers, function(userID) {
-            DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
-            	ChartsMap[type](parameters, function(object) {
-                    logger.info("OK! Successfully authorized.");
-                    var output = jade.renderFile(chart_to_view_template(type), parameters);
-					output += object.content;
-                    res.write(output);
-                    res.end();
-                }, function(err){
-                	logger.error("userID: " + userID + " experimentID: " +  parameters["id"] + " --> " + err);
-                	res.write(auto_removing_tag(parameters["id"], err, 3000));
-                    res.end();
-                })
-			}, function(err) {
-				console.log("FAILED! Sending info about error to Scalarm... \n" + err);
-				res.write("Unable to authenticate");
-				res.end();
-			});
+        DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
+        	ChartsMap[type](parameters, function(object) {
+                logger.info("OK! Successfully authorized.");
+                var output = jade.renderFile(chart_to_view_template(type), parameters);
+				output += object.content;
+                res.write(output);
+                res.end();
+                console.timeEnd("[REQ]");
+            }, function(err){
+            	logger.error("userID: " + userID + " experimentID: " +  parameters["id"] + " --> " + err);
+            	res.write(auto_removing_tag(parameters["id"], err, 3000));
+                res.end();
+            })
 		}, function(err) {
-			res.write(err);
+			console.log("FAILED! Sending info about error to Scalarm... \n" + err);
+			res.write("Unable to authenticate");
 			res.end();
 		});
 	}
