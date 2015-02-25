@@ -11,7 +11,7 @@ function handler(dao) {
 		if(parameters["id"] && parameters["chart_id"] && parameters["output"]) {
 	        getClustering(dao, parameters["id"], parameters["output"], function (data) {
 	            var object = {};
-	            object.content = prepare_clustering_chart_content(parameters, data);
+	            object.content = prepare_clustering_chart_content(parameters, data, parameters["id"]);
 	            success(object);
 	        }, error);
 	    }
@@ -20,10 +20,10 @@ function handler(dao) {
 	}
 }
 
-function prepare_clustering_chart_content(parameters, data) {
+function prepare_clustering_chart_content(parameters, data, experimentID) {
     var output = "<script>(function() { \nvar i=" + parameters["chart_id"] + ";";
     output += "\nvar data = " + JSON.stringify(data) + ";";
-    output += "\nclustering_main(i, data);";
+    output += "\nclustering_main(i, data,'" + experimentID + "');";
     output += "\n})();</script>";
 
     return output;
@@ -31,8 +31,27 @@ function prepare_clustering_chart_content(parameters, data) {
 
 var getClustering = function(dao, id, output, success, error){
     dao.getData(id, function(array, args, mins, maxes){
-        //TODO
-        success(undefined);
+        var data = {
+                        "kl1": {
+                            "simulation_ids" : [ 25,764,57,2,68 ]
+                        },
+                        "kl2": {
+                            "simulation_ids" : [ 326,86,7,9 ]
+                        },
+                        "kl3": {
+                            "simulation_ids" : [ 47,56,456,497 ]
+                        }
+                    };
+        var prepared_data = [];
+        for(var obj in data) {
+            prepared_data.push({
+                y: data[obj]["simulation_ids"].length,
+                name: obj,
+                visible: true,
+                simulation_ids: data[obj]["simulation_ids"]
+            });
+        }
+        success(prepared_data);
     }, error);
 }
 
