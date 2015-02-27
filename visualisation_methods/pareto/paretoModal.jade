@@ -52,7 +52,7 @@ script.
     $('#pareto_charts_form button').bind('click', function() {
       $('#busy_pareto').show();
       if(!scripts_loaded){
-        $("#paretoModal .scripts").load("#{prefix}/script_tags/pareto", function() {
+        $("#paretoModal .scripts").load("#{prefix}/script_tags/pareto?base_url=#{prefix}", function() {
           load_chart();
           scripts_loaded = true;
         });

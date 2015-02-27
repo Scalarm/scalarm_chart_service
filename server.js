@@ -174,11 +174,11 @@ function authenticate(headers, success, error){
     }
 }
 
-function prepare_script_tag(typeOfChart) {
+function prepare_script_tag(typeOfChart, prefix) {
 	if(ChartsMap[typeOfChart]) {
 	    var tag = jsdom.createElement("script");
 	    tag.setAttribute("type", "text/javascript");
-	    tag.setAttribute("src",[PREFIX, "scripts", typeOfChart].join("/"));
+	    tag.setAttribute("src",[prefix, "scripts", typeOfChart].join("/"));
 	    return tag;
 	}
 	else {
@@ -201,7 +201,7 @@ function panel_handler(req, res, _, parameters){
 	DataRetriever.getParameters(parameters["id"], function(data) {
 		panel_locals.parameters = data.parameters;
 		panel_locals.outputs = data.result;
-		panel_locals.prefix = PREFIX;
+		panel_locals.prefix = parameters["base_url"] || PREFIX;
 		panel_locals.experimentID = parameters["id"];
 		res.writeHead(200);
 		var panel = jade.renderFile("panel.jade", panel_locals);
@@ -259,10 +259,10 @@ function scripts_handler(req, res, pathname){
 	});
 };
 
-function script_tags_handler(req, res, pathname){
+function script_tags_handler(req, res, pathname, parameters){
 	var chart_type = pathname.split("/")[2];
 	try {
-		var tag = prepare_script_tag(chart_type);
+		var tag = prepare_script_tag(chart_type, parameters["base_url"] || PREFIX);
 		res.write(tag.outerHTML);
                 res.end();
 	}
