@@ -8,15 +8,29 @@ var info = {
 
 function handler(dao){
 	return function(parameters, success, error){
-		if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"]){
-			getLinDev(dao, parameters["id"], parameters["param1"], parameters["param2"], function(data){
-				var object = {};
-				object.content = prepare_lindev_chart_content(parameters, data);
-				success(object);
-			}, error);
+		if(parameters["id"] && parameters["param1"] && parameters["param2"]) {
+			getLinDev(dao, parameters["id"], parameters["param1"], parameters["param2"], function(data) {
+				var object 	= {};
+				if(parameters["type"]=="data") {
+					object.content = JSON.stringify(data);
+					success(object);
+				}
+				else if(parameters["chart_id"]) {
+					dao.getParameters(parameters["id"], function(retrieved_parameters) {
+						object.content = prepare_lindev_chart_content(parameters, data);
+						object.input_parameters = retrieved_parameters["parameters"];
+						object.moes = retrieved_parameters["result"];
+						success(object);
+					}, error);
+				}
+				else {
+					error("Request parameters missing: 'chart_id'");
+				}
+			}, error)
 		}
-		else
-			error("Request parameters missing");
+		else {
+			error("Request parameters missing: 'id', 'param1' or 'param2'");
+		}
 	}
 }
 

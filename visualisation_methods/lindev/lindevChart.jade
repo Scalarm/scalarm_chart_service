@@ -2,11 +2,67 @@ extends ../templateChart
 block vars
   - var subheader = "Line chart - " + param1 + " vs. " + param2;
   
+block content
+  .row
+    .small-offset-1.small-3.columns
+      label.inline(for="choose_axis_lindev_chart_#{chart_id}") Select axis to add series:
+    .small-5.columns.end
+      select(id="choose_axis_lindev_chart_#{chart_id}")
+        option(value="x") Axis X
+        option(value="y") Axis Y
+  .row
+    .small-offset-1.small-3.columns
+      label.inline(for="new_series_lindev_chart_#{chart_id}") Add new series:
+    .small-5.columns.end
+      select(id="new_series_lindev_chart_#{chart_id}")
+        optgroup(label="Parameters")
+          each parameter in input_parameters
+            option(value=parameter.id)= parameter.label
+        optgroup(label="MoEs").moes
+          each output in moes
+            option(value=output.id)= output.label
+    .small-2.columns.end
+      span.add_series.button.radius.tiny Add series
+
+
 block script
   script.
     $(function() {
+      var setAxis = "x";
+      $("#choose_axis_lindev_chart_#{chart_id}").change(function() {
+        setAxis = $(this).find(":selected").val();
+      });
+
       var div_id = "#lindev_chart_#{chart_id}";
-      $(div_id + " .button").on('click', function() {
+
+      $(div_id+ " .add_series").bind("click", function() {
+        var axis_label = $("#new_series_lindev_chart_#{chart_id} option:selected").html();
+        var axis = $("#new_series_lindev_chart_#{chart_id} option:selected").val();
+        $("#choose_axis_lindev_chart_#{chart_id}").prop("disabled", true);
+
+        if(setAxis=="x") {
+          $.getJSON("#{prefix}/chart_instances/lindev",
+                    {"type": "data", "param1": axis, "param2": $(div_id + " .chart").highcharts().userOptions.yAxis.title.text, "id": "#{id}"},
+                    function(data) {
+                      var chart = $(div_id + " .chart").highcharts();
+                      chart.addAxis({ id: axis, title: { text: axis_label } }, true);
+                      chart.addSeries({name: axis_label.split(" - ").slice(-1)[0], xAxis: axis, data: data[0]});
+                      chart.addSeries({name: axis_label.split(" - ").slice(-1)[0], xAxis: axis, data: data[1], type: "errorbar"});
+          });
+        }
+      	else if(setAxis=="y") {
+          $.getJSON("#{prefix}/chart_instances/lindev",
+                    {"type": "data", "param1": $(div_id + " .chart").highcharts().userOptions.xAxis.title.text, "param2": axis, "id": "#{id}"},
+                    function(data) {
+                      var chart = $(div_id + " .chart").highcharts();
+                      chart.addAxis({ id: axis, title: { text: axis_label } }, true);
+                      chart.addSeries({name: axis_label.split(" - ").slice(-1)[0], yAxis: axis, data: data[0]});
+                      chart.addSeries({name: axis_label.split(" - ").slice(-1)[0], yAxis: axis, data: data[1], type: "errorbar"});
+          });
+      	}
+      });
+
+      $(div_id + " .button.hide").on('click', function() {
         $(div_id).remove();
       });
     });

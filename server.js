@@ -279,7 +279,14 @@ function chart_handler(req, res, pathname, parameters, userID){
         DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
         	ChartsMap[type](parameters, function(object) {
                 logger.info("OK! Successfully authorized.");
-                var output = jade.renderFile(chart_to_view_template(type), parameters);
+                //TODO: take into account base_url
+                parameters["prefix"] = PREFIX;
+                parameters["input_parameters"] = object.input_parameters;
+                parameters["moes"] = object.moes;
+                var output = "";
+                if(!parameters["type"] || parameters["type"]=="scalarm") {
+                	output = jade.renderFile(chart_to_view_template(type), parameters);
+                }
 				output += object.content;
                 res.write(output);
                 res.end();
