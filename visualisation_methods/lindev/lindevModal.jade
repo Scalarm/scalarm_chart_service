@@ -55,6 +55,7 @@ script.
           query_params += "&param1="+x_axis;
           query_params += "&param2="+y_axis;
           query_params += "&chart_id="+chart_counter;
+      //TODO? Query string with prefix?
       $(chart_div).load("#{prefix}/chart_instances/lindev?"+query_params, function(){
         $("#busy_lindev").hide();
         var targetOffset = $(this).offset().top;
