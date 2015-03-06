@@ -1,5 +1,4 @@
 module.exports = {
-	server_ip: <<SERVER_IP>>,
 	server_port: 8080,
 	server_prefix: "/chart",
 	information_service_address: process.env.INFORMATION_SERVICE_URL,

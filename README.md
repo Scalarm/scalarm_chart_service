@@ -32,7 +32,6 @@ Installation guide
 	* **config.js.template**
 
 			module.exports = {
-				server_ip: <<SERVER_IP>>,
 				server_port: 8080,
 				server_prefix: "/chart",
 				information_service_address: process.env.INFORMATION_SERVICE_URL,
@@ -45,7 +44,6 @@ Installation guide
 		and rename it to *config.js*
 	
 		Description:
-		* *server_ip*: IP address of Chart Service 
 		* *server_port*: port of Chart Service
 		* *server_prefix*: prefix added to every link generated from Chart Service (for load balancing)
 		* *information_service_address*: IP address of Information Service
