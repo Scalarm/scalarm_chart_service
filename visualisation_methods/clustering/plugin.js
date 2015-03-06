@@ -8,8 +8,9 @@ var info = {
 
 function handler(dao) {
 	return function(parameters, success, error){
-		if(parameters["id"] && parameters["chart_id"] && parameters["output"]) {
-	        getClustering(dao, parameters["id"], parameters["output"], function (data) {
+		if(parameters["id"] && parameters["chart_id"] && parameters["output_params"]) {
+	        getClustering(dao, parameters["id"], parameters["output_params"], function (data) {
+                // console.log(parameters["output_params"])
 	            var object = {};
 	            object.content = prepare_clustering_chart_content(parameters, data, parameters["id"]);
 	            success(object);

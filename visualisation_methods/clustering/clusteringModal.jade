@@ -5,18 +5,18 @@
 
     form
       .row
-        .small-5.columns
-          label(class='inline') Select output parameter
-        .small-7.columns
-          select.outputParam
-            each parameter in output
-              option(value=parameter.id)= parameter.label
+        label(class='inline') Select output parameters:
+        ul(style='list-style-type:none').outputParams
+          each parameter in output
+            li
+              label
+                input(type='checkbox', value=parameter.id)
+                = parameter.label
 
       .row
         ul.inline-list
           li
             button.button.radius Load chart
-            //t('charts.load_button')
           li
             img(src='#{prefix}/images/loading.gif', id='busy_clustering', size='16x16', style='display: none')
 
@@ -34,18 +34,25 @@ script.
     var load_chart = function() {
       var clustering_chart_div = $("<div id=\"clustering_chart_"+clustering_chart_counter+"\">")[0];
       $("#clusteringModal .charts").prepend(clustering_chart_div);
-      //TODO - if there's nothing to select -> do nothing
-      var output_param = $("#clusteringModal .outputParam option:selected").val();
-      var query_params = "id="+experimentID;
-          query_params += "&output="+output_param;
-          query_params += "&chart_id="+clustering_chart_counter;
-      $(clustering_chart_div).load("#{prefix}/get/clustering?"+query_params, function(){
-        $("#busy_clustering").hide();
-    
-        var targetOffset = $(this).offset().top;
-        $('html,body').animate({ scrollTop: targetOffset }, 1000);
+      var output_params = "";
+      $("#clusteringModal .outputParams :checked").each(function() {
+        output_params += "&output_params=" + $(this).val();
       });
-      clustering_chart_counter++;
+      var query_params = "id="+experimentID;
+          query_params += output_params;
+          query_params += "&chart_id="+clustering_chart_counter;
+      if(output_params.length>0){
+        $(clustering_chart_div).load("#{prefix}/get/clustering?"+query_params, function(){
+          $("#busy_clustering").hide();
+      
+          var targetOffset = $(this).offset().top;
+          $('html,body').animate({ scrollTop: targetOffset }, 1000);
+        });
+        clustering_chart_counter++;
+      }
+      else {
+        $("#busy_clustering").hide();
+      }
     }
 
     $("#clusteringModal button").bind("click", function() {

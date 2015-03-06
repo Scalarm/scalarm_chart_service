@@ -325,7 +325,13 @@ function create_handler(name){
 var pattern = /^\w+$/
 function validate_params(parameters) {
     for (var key in parameters) {
-        if(!pattern.test(parameters[key]))
+    	if(parameters[key].constructor === Array){
+    		for(var i in parameters[key]){
+    			if(!pattern.test(parameters[key][i]))
+            		return false;
+    		}
+    	}
+        else if(!pattern.test(parameters[key]))
             return false;
     }
     return true;
