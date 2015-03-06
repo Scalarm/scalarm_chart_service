@@ -84,12 +84,15 @@ script.
 
     function update_moes(){
       var moes = $(".moes");
+      var moes_ul_list = $(".moes_ul_list");
       var moes_values = moes.children().map(function() { return $(this).attr("value"); }).toArray();
       $.getJSON('#{prefix}/moes?id=#{experimentID}', function(data){
         data.map(function(d){
           if(moes_values.indexOf(d.id)<0){
             var option = "<option value=" + d.id + ">" + d.label + "</option";
             moes.append(option);
+            var li = "<li><label><input type=checkbox value=" + d.id + ">" + d.label + "</label></li>";
+            moes_ul_list.append(li);
           }
         });
       });
