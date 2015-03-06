@@ -11,7 +11,7 @@ var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var DataRetriever = require("./data_retriever.js");
-var LoadBalancerRegistration = require("./load_balancer_registration.js");
+var RegistrationModule = require("./registration_module.js");
 
 var config = require("./config.js");
 var panel_locals = require("./panel_locals.js");
@@ -49,12 +49,16 @@ var requests_map = prepare_map_with_requests();
 var ChartsMap = create_charts_map();
 var app = http.createServer(server_handler);
 
-LoadBalancerRegistration.retrieveDBAddress(function(address) {
+
+if(config.multicast_address && config.multicast_port) {
+    RegistrationModule.retrieveLBAddress(function(LBaddress) {
+      RegistrationModule.registerChartServiceInLoadBalancer(LBaddress);      
+    });
+}
+
+RegistrationModule.retrieveDBAddress(function(address) {
     DataRetriever.connect(address, function(){
         app.listen(PORT, function(){
-            LoadBalancerRegistration.registerChartService(function(){
-            	logger.trace("ChartService registered");
-            });
             logger.trace("Listening on port " + PORT);
         });
     }, function(){
@@ -133,6 +137,7 @@ function ws_handler(request) {
 }
 
 function authenticate(headers, success, error){
+	console.time("[AUTH_COOKIE]");
     var cookies = headers.cookie;
     if(cookies) {
     	var cookie = parseCookies(cookies)["_scalarm_session"];
@@ -148,6 +153,7 @@ function authenticate(headers, success, error){
                 return;
             }
             var userID = JSON.parse(stdout)["user"];
+            console.timeEnd("[AUTH_COOKIE]");
             success(userID);
         });
     }
@@ -168,11 +174,11 @@ function authenticate(headers, success, error){
     }
 }
 
-function prepare_script_tag(typeOfChart) {
+function prepare_script_tag(typeOfChart, prefix) {
 	if(ChartsMap[typeOfChart]) {
 	    var tag = jsdom.createElement("script");
 	    tag.setAttribute("type", "text/javascript");
-	    tag.setAttribute("src",[PREFIX, "main", typeOfChart].join("/"));
+	    tag.setAttribute("src",[prefix, "scripts", typeOfChart].join("/"));
 	    return tag;
 	}
 	else {
@@ -184,19 +190,18 @@ function prepare_map_with_requests() {
 	var map = {};
 	map["panel"] = panel_handler;
 	map["images"] = images_handler;
-	map["main"] = main_handler;
 	map["scripts"] = scripts_handler;
-	map["get"] = chart_handler;
+	map["script_tags"] = script_tags_handler;
+	map["chart_instances"] = chart_handler;
+	map["moes"] = moes_handler;
 	return map;
 }
 
 function panel_handler(req, res, _, parameters){
 	DataRetriever.getParameters(parameters["id"], function(data) {
 		panel_locals.parameters = data.parameters;
-		panel_locals.output = data.result;
-        panel_locals.parameters_and_output = data.parameters.concat(data.result);
-		// panel_locals.address = ADDRESS;
-		panel_locals.prefix = PREFIX;
+		panel_locals.outputs = data.result;
+		panel_locals.prefix = parameters["base_url"] || PREFIX;
 		panel_locals.experimentID = parameters["id"];
 		res.writeHead(200);
 		var panel = jade.renderFile("panel.jade", panel_locals);
@@ -227,9 +232,8 @@ function images_handler(req, res, pathname) {
 	});
 };
 
-function main_handler(req, res, pathname){
+function scripts_handler(req, res, pathname){
 	var type = pathname.split("/")[2];
-	var resource = pathname.split("/")[1];
 	if(!type) {
 		res.write("Type of chart not specified!\n");
 		res.end();
@@ -240,9 +244,7 @@ function main_handler(req, res, pathname){
 		res.end();
 		return;
 	}
-	var file_path = [METHODS_DIR, type, type+"_chart_"+resource].join("/");
-	file_path += resource==="style" ? ".css" : ".js";
-
+	var file_path = [METHODS_DIR, type, type+"_chart.js"].join("/");
 	fs.readFile(file_path, function(error, data) {
 		if(error) {
 			res.writeHead(404);
@@ -257,10 +259,10 @@ function main_handler(req, res, pathname){
 	});
 };
 
-function scripts_handler(req, res, pathname){
+function script_tags_handler(req, res, pathname, parameters){
 	var chart_type = pathname.split("/")[2];
 	try {
-		var tag = prepare_script_tag(chart_type);
+		var tag = prepare_script_tag(chart_type, parameters["base_url"] || PREFIX);
 		res.write(tag.outerHTML);
                 res.end();
 	}
@@ -271,28 +273,32 @@ function scripts_handler(req, res, pathname){
 };
 
 function chart_handler(req, res, pathname, parameters, userID){
+	console.time("[REQ]");
 	var type = pathname.split("/")[2];
 	if(METHODS.indexOf(type) >= 0){
-		authenticate(req.headers, function(userID) {
-            DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
-            	ChartsMap[type](parameters, function(object) {
-                    logger.info("OK! Successfully authorized.");
-                    var output = jade.renderFile(chart_to_view_template(type), parameters);
-					output += object.content;
-                    res.write(output);
-                    res.end();
-                }, function(err){
-                	logger.error("userID: " + userID + " experimentID: " +  parameters["id"] + " --> " + err);
-                	res.write(auto_removing_tag(parameters["id"], err, 3000));
-                    res.end();
-                })
-			}, function(err) {
-				console.log("FAILED! Sending info about error to Scalarm... \n" + err);
-				res.write("Unable to authenticate");
-				res.end();
-			});
+        DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
+        	ChartsMap[type](parameters, function(object) {
+                logger.info("OK! Successfully authorized.");
+                //TODO: take into account base_url
+                parameters["prefix"] = PREFIX;
+                parameters["input_parameters"] = object.input_parameters;
+                parameters["moes"] = object.moes;
+                var output = "";
+                if(!parameters["type"] || parameters["type"]=="scalarm") {
+                	output = jade.renderFile(chart_to_view_template(type), parameters);
+                }
+				output += object.content;
+                res.write(output);
+                res.end();
+                console.timeEnd("[REQ]");
+            }, function(err){
+            	logger.error("userID: " + userID + " experimentID: " +  parameters["id"] + " --> " + err);
+            	res.write(auto_removing_tag(parameters["id"], err, 3000));
+                res.end();
+            })
 		}, function(err) {
-			res.write(err);
+			console.log("FAILED! Sending info about error to Scalarm... \n" + err);
+			res.write("Unable to authenticate");
 			res.end();
 		});
 	}
@@ -301,6 +307,24 @@ function chart_handler(req, res, pathname, parameters, userID){
 		res.write(type + " chart not supported!");
 		res.end();
 	}
+}
+
+function moes_handler(req, res, _, parameters, userID){
+	DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
+		DataRetriever.getParameters(parameters["id"], function(data) {
+			res.write(JSON.stringify(data.result));
+			res.end();
+		},
+		function(err) {
+			res.writeHead(404);
+			res.write("Error getting parameters\n");
+			res.write(err+"\n");
+			res.end();
+		})
+	}, function(){
+	    console.log("Error checking experiment's affiliation");
+	    res.write("You don't have access to experiment " + parameters["id"]);
+	});
 }
 
 function create_charts_map(){
@@ -345,13 +369,15 @@ function chart_to_modal_template(type) {
 	return [METHODS_DIR, type, type+"Modal.jade"].join("/");
 }
 
+//TODO - wyescapowac message (zeby nie mozna bylo uruhcomic)
 function auto_removing_tag(id, message, timeout) {
 	return util.format(" \
 		<span id=\"%s\"> %s \
 			<script> \
+				toastr.error(\"%s\"); \
 				setTimeout(function() { \
 					$(\"#%s\").remove(); \
 				}, %d); \
 			</script> \
-		</span>", id, message, id, timeout);
+		</span>", id, message, message, id, timeout);
 }

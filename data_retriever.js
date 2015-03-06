@@ -1,4 +1,3 @@
-//var DBURL = require("./config.js").db_url;
 var COLLECTION_NAME = "experiment_instances_";
 var CAPPED_COLLECTION_NAME = "experiment_progress_notifications";
 var mongo = require('mongodb');
@@ -6,7 +5,7 @@ var client = mongo.MongoClient;
 var crypto = require('crypto');
 
 var connect = function(address, success, error){
-	client.connect(address, function(err, db){
+	client.connect(address, {server: {poolSize: 4}}, function(err, db){
 		if (err){
 			error();
 			return;
@@ -14,6 +13,7 @@ var connect = function(address, success, error){
 		success();
 
 		var getData = function(id, convertData, error){
+			console.time("[DB]");
 			var filter = {is_done: true, is_error: {'$exists': false}};
 			var fields = {fields: {arguments: 1, values: 1, result: 1}};
 
@@ -53,7 +53,7 @@ var connect = function(address, success, error){
 					mins[args[i]] = min(array, args[i]);
 					maxes[args[i]] = max(array, args[i]);
 				}
-				
+				console.timeEnd("[DB]");
 				convertData(array,args,mins,maxes);
 			});
 		};

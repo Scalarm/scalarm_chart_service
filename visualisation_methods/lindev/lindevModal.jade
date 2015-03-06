@@ -9,15 +9,23 @@
           label(class='inline') Select first parameter
         .small-7.columns
           select.firstParam
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup(label="MoEs").moes
+              each output in outputs
+                option(value=output.id)= output.label
       .row
         .small-5.columns
           label(class='inline') Select second parameter
         .small-7.columns
           select.secondParam
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup(label="MoEs").moes
+              each output in outputs
+                option(value=output.id)= output.label
 
       .row
         ul.inline-list
@@ -33,7 +41,6 @@ script.
   $(function() {
     $("#lindevModal").foundation("reveal", "close");
 
-    var experimentID = "#{experimentID}";
     var chart_counter = 0;
     var scripts_loaded = false;
 
@@ -44,11 +51,12 @@ script.
       var x_axis = $("#lindevModal .firstParam option:selected").val();
       var y_axis = $("#lindevModal .secondParam option:selected").val();
 
-      var query_params = "id="+experimentID;
+      var query_params = "id=#{experimentID}";
           query_params += "&param1="+x_axis;
           query_params += "&param2="+y_axis;
           query_params += "&chart_id="+chart_counter;
-      $(chart_div).load("#{prefix}/get/lindev?"+query_params, function(){
+      //TODO? Query string with prefix?
+      $(chart_div).load("#{prefix}/chart_instances/lindev?"+query_params, function(){
         $("#busy_lindev").hide();
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);
@@ -59,7 +67,7 @@ script.
     $("#lindevModal button").bind("click", function() {
       $("#busy_lindev").show();
       if(!scripts_loaded) {
-        $("#lindevModal .scripts").load("#{prefix}/scripts/lindev", function(){
+        $("#lindevModal .scripts").load("#{prefix}/script_tags/lindev?base_url=#{prefix}", function(){
           load_chart();
           scripts_loaded = true;
         });

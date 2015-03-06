@@ -9,23 +9,35 @@
           label(class='inline') Select first parameter
         .small-7.columns
           select.firstParam
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup.moes(label="MoEs")
+              each output in outputs
+                option(value=output.id)= output.label
       .row
         .small-5.columns
           label(class='inline') Select second parameter
         .small-7.columns
           select.secondParam
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup.moes(label="MoEs")
+              each output in outputs
+                option(value=output.id)= output.label
 
       .row
         .small-5.columns
           label(class='inline') Select third parameter
         .small-7.columns
           select.thirdParam
-            each parameter in parameters_and_output
-              option(value=parameter.id)= parameter.label
+            optgroup(label="Parameters")
+              each parameter in parameters
+                option(value=parameter.id)= parameter.label
+            optgroup.moes(label="MoEs")
+              each output in outputs
+                option(value=output.id)= output.label
 
       .row
         ul.inline-list
@@ -41,7 +53,6 @@ script.
   $(function() {
     $("#threeDModal").foundation("reveal", "close");
 
-    var experimentID = "#{experimentID}";
     var three_d_chart_counter = 0;
     var scripts_loaded = false;
 
@@ -52,12 +63,12 @@ script.
       var x_axis = $("#threeDModal .firstParam option:selected").val();
       var y_axis = $("#threeDModal .secondParam option:selected").val();
       var z_axis = $("#threeDModal .thirdParam option:selected").val();
-      var query_params = "id="+experimentID;
+      var query_params = "id=#{experimentID}";
           query_params += "&param1="+x_axis;
           query_params += "&param2="+y_axis;
           query_params += "&param3="+z_axis;
       query_params += "&chart_id="+three_d_chart_counter;
-      $(three_d_chart_div).load("#{prefix}/get/3d?"+query_params, function(){
+      $(three_d_chart_div).load("#{prefix}/chart_instances/3d?"+query_params, function(){
         $("#busy_3d").hide();
     
         var targetOffset = $(this).offset().top;
@@ -69,7 +80,7 @@ script.
     $("#threeDModal button").bind("click", function() {
       $("#busy_3d").show();
       if(!scripts_loaded) {
-        $("#threeDModal .scripts").load("#{prefix}/scripts/3d", function() {
+        $("#threeDModal .scripts").load("#{prefix}/script_tags/3d?base_url=#{prefix}", function() {
           load_chart();
           scripts_loaded = true;
         });
