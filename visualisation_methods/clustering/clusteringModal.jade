@@ -7,7 +7,7 @@
       .row
         label(class='inline') Select output parameters:
         ul(style='list-style-type:none').outputParams
-          each parameter in output
+          each parameter in outputs
             li
               label
                 input(type='checkbox', value=parameter.id)
@@ -42,7 +42,7 @@ script.
           query_params += output_params;
           query_params += "&chart_id="+clustering_chart_counter;
       if(output_params.length>0){
-        $(clustering_chart_div).load("#{prefix}/get/clustering?"+query_params, function(){
+        $(clustering_chart_div).load("#{prefix}/chart_instances/clustering?"+query_params, function(){
           $("#busy_clustering").hide();
       
           var targetOffset = $(this).offset().top;
@@ -58,7 +58,7 @@ script.
     $("#clusteringModal button").bind("click", function() {
       $("#busy_clustering").show();
       if(!scripts_loaded) {
-        $("#clusteringModal .scripts").load("#{prefix}/scripts/clustering", function() {
+        $("#clusteringModal .scripts").load("#{prefix}/script_tags/clustering", function() {
           load_chart();
           scripts_loaded = true;
         });
