@@ -29,6 +29,9 @@ log4js.configure({
 });
 var logger = log4js.getLogger("server.js");
 
+// var PORT = config.server_port,
+	// EXTERNAL_IP = config.server_ip,// + ":3001",			//TODO - retrieve external IP
+	// ADDRESS = EXTERNAL_IP + config.server_prefix;		//address suffix set in /etc/nginx/conf.d/default.conf
 var PORT = config.server_port;
 var PREFIX = config.server_prefix;
 
