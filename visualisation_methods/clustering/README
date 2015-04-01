@@ -1,0 +1,4 @@
+Requires R version >=3.0.0
+Requires R packages: Rcpp, RInside, RJSONIO, (rjson?)
+Requires node module: rstats
+Requires e1071 for skewness and kurtosis

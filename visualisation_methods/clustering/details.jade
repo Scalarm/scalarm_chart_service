@@ -1,0 +1,55 @@
+div(id='clusters_details' class='reveal-modal', data-reveal='data-reveal')
+  each cluster in clusters
+    row(class='cluster_row', id='cluster_#{cluster.cluster}')
+      div(class='small-4 columns')
+        h4 Cluster details
+        br
+        a(class='spec_link') Cluster's properties
+        br
+        br
+        p Simulations included:
+        div(class='panel log-box')
+          each sim in cluster.indexes
+            a(class='sim_link', data-sim-id=sim)= sim
+            br
+      div(class='small-8 columns')
+        div(id='viewer_cluster_#{cluster.cluster}')
+        div(id='spec_cluster_#{cluster.cluster}')
+          h4 Means
+          ul
+            each mean, key in cluster.means
+              - if(key != 'simulation_index')
+                li= key + ': ' + mean
+          br
+          h4 Ranges
+          ul
+            each range, key in cluster.ranges
+              - if(key != 'simulation_index')
+                li= key + ': [ ' + range[0] + ', ' + range[1] + ' ]'
+    each subcluster in cluster.subclusters
+      row(class='cluster_row', id='cluster_#{subcluster.cluster}')
+        div(class='small-4 columns')
+          h4 Cluster details
+          br
+          a(class='spec_link') Cluster's properties
+          br
+          br
+          p Simulations included:
+          div(class='panel log-box')
+            each sim in subcluster.indexes
+              a(class='sim_link', data-sim-id=sim)= sim
+              br
+        div(class='small-8 columns')
+          div(id='viewer_cluster_#{subcluster.cluster}')
+          div(id='spec_cluster_#{subcluster.cluster}')
+            h4 Means
+            ul
+              each mean, key in subcluster.means
+                - if(key != 'simulation_index')
+                  li= key + ': ' + mean
+            br
+            h4 Ranges
+            ul
+              each range, key in subcluster.ranges
+                - if(key != 'simulation_index')
+                  li= key + ': [ ' + range[0] + ', ' + range[1] + ' ]'
