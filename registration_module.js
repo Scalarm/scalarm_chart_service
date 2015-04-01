@@ -70,7 +70,7 @@ module.exports.registerChartServiceInLoadBalancer = function(LBaddress){
 //        name: "ChartService",
 //        address: config.server_ip + ":" + config.server_port
 //    });
-    var data = new Buffer("name=ChartService&address=localhost:"+config.server_port);
+    var data = new Buffer("name=ChartService&address="+config.server_ip+":"+config.server_port);
 
     var options = {
         host: LBaddress,
